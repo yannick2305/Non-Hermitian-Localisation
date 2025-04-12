@@ -2,7 +2,7 @@
     --------------------------------------------------------------
     Author(s):    [Erik Orvehed HILTUNEN , Yannick DE BRUIJN]
     Date:         [April 2025]
-    Description:  [Cloaking in monomer chain]
+    Description:  [Cloaking in defected non-Hermitian monomer chain]
     --------------------------------------------------------------
 %}
 
