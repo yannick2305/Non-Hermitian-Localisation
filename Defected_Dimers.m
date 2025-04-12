@@ -1,40 +1,45 @@
 %{
     --------------------------------------------------------------
     Author(s):    [Erik Orvehed HILTUNEN , Yannick DE BRUIJN]
-    Date:         [March 2025]
-    Description:  [Defected Dimer system]
+    Date:         [April 2025]
+    Description:  [Defected Dimer system and Green's function]
     --------------------------------------------------------------
 %}
-
 
 clear all;
 close all;
 
-n = 400; 
-gamma = 2;                  % Gauge potential
-delta = 0.001;              % Contrast parameter
-nu = 1.5;                   % Change in wavespeed
-ell   = [0.25, 0.25];       % Resonator lengths
-spa     = [1, 2];           % Resonator spacings
-defect_site = floor(n/3);
+% --- Define the system parameters ---
+    n     = 400;        % Number of unit cells
+    gamma = 2;          % Gauge potential
+    delta = 0.001;      % Contrast parameter
+    nu    = 1.5;        % Change in wavespeed
+    ell   = [1, 1];     % Resonator lengths
+    spa   = [1, 2];     % Resonator spacings
+    fs    = 18;         % Fontsize in plot annotation
 
-fs = 18;
+    % --- Set the site of the defect ---
+    defect_site = floor(n/3);
 
-spa = (0.5 / (spa(1) + spa(2))) * spa;
+% --- Normalise the unit cell to L = 1 ---
+    spa = (0.5 / (spa(1) + spa(2))) * spa;
+    ell = (0.5 / (ell(1) + ell(2))) * ell;
 
-s = [];
-l = [];
+    s = zeros(1, 2*n);
+    l = zeros(1, 2*n);
+    
+    for i = 1:n
+        idx = 2*(i-1) + 1;
+        l(idx:idx+1) = [ell(1), ell(1)];
+        s(idx:idx+1) = [spa(1), spa(2)];
+    end
 
-for i = 1:n
-    l = [l, ell(1), ell(1)]; 
-    s = [s, spa(1), spa(2)];
-end
+    N = 2 * n;
+    
+    % --- Generate the capacitance matrix ---
+    capmat = Capacitance(N, s, gamma,  l);
 
-N = length(l);
-
-capmat = Capacitance(N, s, gamma,  l);
-
-% --- Define defect Matrix ---
+    % --- Define defect Matrix ---
     D = eye(N);
     D(defect_site, defect_site) = 1 + nu;
     Def = D * capmat;
@@ -73,23 +78,21 @@ capmat = Capacitance(N, s, gamma,  l);
     disp(['Defect Frequency 2: ', num2str(def(2))]);
 
 
-
 % --- Discrete Green's function ---
-    N = 400;
     cap = delta * Capacitance(N, s, gamma,  l);
     
+    % --- Generate a point source ---
     dirac = zeros(1, N);
     dirac(floor(N/2)) = 1;
     dirac = dirac.';
 
-    N_freq = 30;
-
+    % --- Measure decay length of Green's function for frequency range ---
+    N_freq = 100;
     w = linspace(0.001, 0.15, N_freq);
 
     decay_l = zeros(1, N_freq);
     decay_r = zeros(1, N_freq);
     I = eye(N);
-
 
     for i = 1:N_freq
         Green = (cap-w(i)^2*I) \ I;
@@ -126,12 +129,14 @@ capmat = Capacitance(N, s, gamma,  l);
     if nu > 0
         % --- Defect in the top spectral Gap ---
         h2 = plot(n,   def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
-        h2 = plot(2*n, def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+        plot(2*n, def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
     else
         % --- Defect in the lower spectral Gap ---
         h2 = plot(2,   def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
-        h2 = plot(n+1, def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+        plot(n+1, def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
     end
+
+    % --- Mark the quasiperiodic spectrum ---
     yline(double(lim1(1)), 'b--', 'LineWidth', 1);
     yline(double(lim2(1)), 'b--', 'LineWidth', 1);
     yline(double(lim1(2)), 'b--', 'LineWidth', 1);
@@ -140,14 +145,9 @@ capmat = Capacitance(N, s, gamma,  l);
     xlabel('Index',    'Interpreter', 'latex', 'FontSize', fs);
     ylabel('$\omega$', 'Interpreter', 'latex', 'FontSize', fs);
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
-    legend([h1, h2], {'Band Resonance', 'Defect Resonance'}, ...
-        'Interpreter', 'latex', ...
-    'Location', 'southeast', ...
-    'Box', 'on');
+    legend([h1, h2], {'Band Resonance', 'Defect Resonance'}, 'Interpreter', 'latex', 'Location', 'southeast', 'Box', 'on');
     set(gcf, 'Position', [100, 100, 500, 300]);
     ylim([0, 0.19]);
-
-
 
 
 %% --- Define function ---
