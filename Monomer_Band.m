@@ -1,8 +1,8 @@
 %{
     --------------------------------------------------------------
     Author(s):    [Erik Orvehed HILTUNEN , Yannick DE BRUIJN]
-    Date:         [March 2025]
-    Description:  [Spectral plot gauge capacitance]
+    Date:         [April 2025]
+    Description:  [Spectral plot monomer chain]
     --------------------------------------------------------------
 %}
 
@@ -18,6 +18,7 @@
     L  = s1 + l1;       % Length of the unit cell
     Nx = 100;           % Number of plotting points in the bands
     fs = 18;            % Fontsize in plot annotation
+    lw = 2.5;
     
     % --- Renormalise the lengths ---
     s1 = s1 / L;
@@ -55,7 +56,8 @@
     b =  gamma / s1  *  l1 / (1 - exp( gamma * l1));
     c = -gamma / s1  *  l1 / (1 - exp(-gamma * l1));
 
-    f_z = c * sqrt(b/c) * exp(-1j * alpha) + a + b * sqrt(c/b) * exp(1j * alpha);
+    %f_z = c * sqrt(b/c) * exp(-1j * alpha) + a + b * sqrt(c/b) * exp(1j * alpha);
+    f_z = -2 * sqrt(b*c) * cos(alpha) + a;
     f_z = sqrt(delta * abs(f_z));
    
 % --- Compute the decay of Green's function ---
@@ -65,14 +67,14 @@
     c = delta * c;
 
     % --- Decay to the left of the defect ---
-    omega_1 = linspace(0, Lower_gap, 5 );
+    omega_1 = linspace(0, Lower_gap, 3 );
 
     d  = (a - omega_1.^2)/ (2 * sqrt(b*c));
     dl = real(- (acosh(d) + log(sqrt(b*c)) - log(abs(b))));
     dr = real(   acosh(d) + log(sqrt(b*c)) - log(abs(c)));
 
     % --- Decay to the right of the defect ---
-    omega_2 = linspace(Upper_gap, 1.5 * Upper_gap, 5);
+    omega_2 = linspace(Upper_gap, 1.5 * Upper_gap, 9);
 
     d   = (a - omega_2.^2)/ (2 * sqrt(b*c));
     dl2 = real(-(acosh(d) + log(sqrt(b*c)) - log(abs(b)) ));
@@ -80,10 +82,10 @@
 
 % --- Plot the spectral bands ---
     figure;
-    plot(beta_lower_gap, real(w_beta_lower_gap), 'r', 'LineWidth', 2);
+    plot(beta_lower_gap, real(w_beta_lower_gap), 'r', 'LineWidth', lw);
     hold on;
-    plot(alpha,          real(w_alpha),          'k',  'LineWidth', 2);
-    plot(beta_upper_gap, real(w_beta_upper_gap), 'r',  'LineWidth', 2);
+    plot(alpha,          real(w_alpha),          'k',  'LineWidth', lw);
+    plot(beta_upper_gap, real(w_beta_upper_gap), 'r',  'LineWidth', lw);
 
     % --- Plot the decay of the Green's function ---
     %{
@@ -99,14 +101,6 @@
     plot([-pi -pi],                 [Upper_gap 3 * Upper_gap], 'k-', 'LineWidth', 1);
     plot([-gamma*l1/2 -gamma*l1/2], [Lower_gap  Upper_gap],    'r-', 'LineWidth', 1);
 
-    % --- Plot the symbol bands ---
-    %plot(alpha,          real(f_z),          'r:',  'LineWidth', 2);
-
-    % --- Verify that imaginary part vanishes (debugging) ---
-    %plot(beta_lower_gap, imag(w_beta_lower_gap), 'r--', 'LineWidth', 2);
-    %plot(beta_upper_gap, imag(w_beta_upper_gap), 'r--', 'LineWidth', 2);
-    %plot(alpha,          imag(w_alpha),          'k--', 'LineWidth', 2);
-
     % --- Mark limit of Spectrum/Gap ---
     yline(Upper_gap, 'k--', 'LineWidth', 1);
     yline(Lower_gap, 'k--', 'LineWidth', 1);
@@ -120,7 +114,7 @@
     xticks([-pi/L, 0, pi/L]); 
     xticklabels({'$-\pi/L$', '$0$', '$\pi/L$'});
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
-    set(gcf, 'Position', [100, 100, 400, 400]); 
+    set(gcf, 'Position', [100, 100, 500, 400]); 
 
     grid off;
     hold off;
