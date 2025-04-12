@@ -10,23 +10,49 @@ close all;
 clear all;
 
 % --- Parameters ---
-    n  = 30;                    % Number of unit cells in the chain
-    l1 = 0.5;                   % Length of a monomer resonator
-    s1 = 0.5;                   % Spacing of a monomer resonator
-    gamma = 1;                  % Gauge potential
-    nu = 1.5;                   % Defect parameter (change in wavespeed)
-    defect_site = floor(n/2);   % Site of the defect
+    n     = 30;                 % Number of unit cells in the chain
+    l1    = 0.5;                % Length of a monomer resonator
+    s1    = 0.5;                % Spacing of a monomer resonator
+    gamma = 3;                  % Gauge potential
+    eta   = 1.9;                % Defect parameter (change in wavespeed)
     delta = 0.001;              % Contrast
+    defect_site = floor(n/2);   % Site of the defect
     fs = 18;                    % Fontsize in the plot
     lw = 3;                     % Linewidth of the modes plot
     
     % --- Renormalise the lengths ---
-    L = l1 + s1;
+    L  = l1 + s1;
     s1 = s1 / L;
     l1 = l1 / L;
     L  = 1;
 
-% --- Compute the resonances of the chain ---
+% --- Find optimal defect size for cloaking ---
+    % --- Compute the spectral bands ---
+    a = (gamma / s1) * (l1 / (1 - exp(-gamma * l1))) - (gamma / s1) * (l1 / (1 - exp(gamma * l1)));
+    b =  gamma / s1  *  l1 / (1 - exp( gamma * l1));
+    c = -gamma / s1  *  l1 / (1 - exp(-gamma * l1));
+    
+    a = delta * a;
+    b = delta * b;
+    c = delta * c;
+    
+    % --- Find limit of the winding region ---
+    alpha_fixed_2 = pi;
+    w_beta_0 = (gamma * l1)/s1 * ( (1 - exp(-1i*(alpha_fixed_2 + 1i* 0)*L)) / (1 - exp(-gamma * l1)) + (exp(1i*(alpha_fixed_2 + 1i* 0)*L)-1) / (1-exp(gamma*l1)) );
+    w_beta_0 = sqrt(delta * abs(w_beta_0));
+
+    func = @(eta) sqrt((a * (eta + 1)^2 + sign(eta) * sqrt((eta + 1)^2 * (a^2 * eta^2 + 8 * b * c * eta + 4 * b * c))) / (2 * eta + 1)) - w_beta_0;
+    
+    eta0 = 1;  % Initial Guess
+    options = optimoptions('fsolve', 'Display', 'off');
+    eta_solution = fsolve(func, eta0, options);
+    
+    % Display result
+    disp('----------------------------------------');
+    fprintf('Cloaking eta:     %.6f\n', eta_solution);
+
+% --- Compute the resonances of the defected monomer chain ---
+
     % --- Initialise resonator chain ---
     l = l1 * ones(1, n);
     s = s1 * ones(1, n);
@@ -36,11 +62,12 @@ clear all;
           
     % --- Define defect Matrix ---
     D = eye(n);
-    D(defect_site, defect_site) = 1 + nu;
+    D(defect_site, defect_site) = 1 + eta;
+
     Def = D * capmat;
        
     % --- Compute the resonances ---
-    [~, eigenvalues_matrix] = eig(Def);
+    [Vect, eigenvalues_matrix] = eig(Def);
     eigenvalues = sort(diag(eigenvalues_matrix));
     eigenvalues = abs(eigenvalues);
     resonances  = sqrt(eigenvalues * delta);
@@ -54,29 +81,31 @@ clear all;
     Lower_gap = sqrt(delta * Lower_gap);
 
     % ---Find defect frequency based on the type of defect ---
-    if nu > 0
+    if eta > 0
         % --- Defect in the top spectral Gap ---
         w_def = resonances(n);
+        resonances(n) = NaN;
+
     else
         % --- Defect in the lower spectral Gap ---
         w_def = resonances(2);
+        resonances(2) = NaN;
     end   
 
     % --- Display the defect eigenfrequency ---
-    disp('----------------------------------------');
     disp(['Defect Frequency: ', num2str(w_def)]);
     
 % --- Illustrate the result ---
     figure;
-    plot(resonances, 'ko', 'LineWidth', 4, 'MarkerSize', 8); 
+    h1 = plot(resonances, 'ko', 'LineWidth', 4, 'MarkerSize', 8); 
     hold on;
-    
-    if nu > 0
+
+    if eta > 0
         % --- Defect in the top spectral Gap ---
-        plot(n, resonances(n), 'ro', 'LineWidth', 4, 'MarkerSize', 8);
+        h2 = plot(n, w_def, 'rx', 'LineWidth', 4, 'MarkerSize', 8);
     else
         % --- Defect in the lower spectral Gap ---
-        plot(2, resonances(2), 'ro', 'LineWidth', 4, 'MarkerSize', 8);
+        h2 = plot(2, w_def, 'rx', 'LineWidth', 4, 'MarkerSize', 8);
     end
      
     yline(Lower_gap, 'b--', 'LineWidth', 1);
@@ -84,8 +113,10 @@ clear all;
     xlabel('Index',    'Interpreter', 'latex', 'FontSize', fs);
     ylabel('$\omega$', 'Interpreter', 'latex', 'FontSize', fs);
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    legend([h1, h2], {'Band Resonance', 'Defect Resonance'}, 'Interpreter', 'latex', 'Location', 'southeast', 'Box', 'on');
     grid off;
-    set(gcf, 'Position', [100, 100, 500, 500]); 
+    ylim([0, 0.159]);
+    set(gcf, 'Position', [100, 100, 500, 300]); 
 
 
 %% --- Plot the eigenmodes ---
@@ -99,7 +130,7 @@ clear all;
     figure;
     hold on; 
 
-    if nu > 0
+    if eta > 0
         % --- Defect in the top spectral Gap ---
         plot(1:n, abs(sortedEigenvectors(:, n)), '-', 'Color', 0.65 * [1, 1, 1], 'LineWidth', lw * 1.5, 'MarkerSize', 15);
     else
@@ -112,28 +143,32 @@ clear all;
     grid on;
     set(gca, 'YScale', 'log');
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    set(gcf, 'Position', [100, 100, 400, 400]); 
     hold off;
 
 
 %% --- Convergence to the infinite system ---
 
-    N = 10; % Range of the system sizes
-    
-    % --- Precomputed value of the infinite chain ---
-    w_def_int = 0.1124085417663; % nu = 1.5, gamma = 1, s1 = l1 = 0.5
+    N = 52; % Range of the system sizes
+
+    % --- Cosed form of defect resonance in infinite chain ---
+    w_def_closed_form = sqrt((a * (eta + 1)^2 + eta/abs(eta) * sqrt((eta + 1)^2 * (a^2 * eta^2 + 8 * b * c * eta + 4 * b * c))) / (2 * eta + 1)); 
+    disp(['Closed Sol:       ', num2str(w_def_closed_form)]);
     
     % --- Iterate over chain sizes ---
-    res = ones(1,N);
-    sizes = 3:N; % System sizes
+    sizes = 3:2:N+2; % System sizes
+    res = ones(1, floor(N/2) );
+    idx = 1;
     
     for n = sizes
+
         % --- Generate defected capacitance matrix ---
         defect_site = floor(n/2);
         l = l1 * ones(1, n);
         s = s1 * ones(1, n);
         capmat = Capacitance(n, s, gamma, l);
         D = eye(n);
-        D(defect_site, defect_site) = 1 + nu;
+        D(defect_site, defect_site) = 1 + eta;
         Def = D * capmat;
         
         % --- Compute the resonances ---
@@ -141,37 +176,39 @@ clear all;
         eigenvalues = sort(diag(eigenvalues_matrix));
         eigenvalues = abs(eigenvalues);
         resonances  = sqrt(eigenvalues * delta);
-            
-        w_def = resonances(n);
-        res(n) = abs(w_def - w_def_int);
+        if eta > 0
+            w_def = resonances(n);
+        else
+            w_def = resonances(2);
+        end
+        res(idx) = abs(w_def - w_def_closed_form);
+        idx = idx + 1;
     end
     
     % --- Fit a regression line on the semilog plot ---
-    log_res = log(res(3:end)); % Ignore initial ones
-    p = polyfit(sizes, log_res, 1); % Linear fit: log(res) = p(1) * size + p(2)
-    slope = p(1); % Extract slope
+    log_res = log(res(1:end)); 
+    p = polyfit(sizes, log_res, 1); 
+    slope = p(1); 
     
     % --- Plot results ---
     figure;
-    semilogy(sizes, res(3:end), 'bo', 'LineWidth', 2, 'MarkerSize', 8);  
+    semilogy(sizes, res(1:end), 'kx', 'LineWidth', 2, 'MarkerSize', 9);  
     hold on;
     
     % --- Plot regression line ---
-    semilogy(sizes, exp(polyval(p, sizes)), 'r--', 'LineWidth', 2);
+    %semilogy(sizes, exp(polyval(p, sizes)), 'r--', 'LineWidth', 2);
     
-    xlabel('Size of the system', 'Interpreter', 'latex', 'FontSize', fs);
-    ylabel('Frequency error', 'Interpreter', 'latex', 'FontSize', fs);
+    xlabel('N', 'Interpreter', 'latex', 'FontSize', fs);
+    ylabel('$\bigl|\omega_0 - \omega_0^{(N)}\bigr|$', 'Interpreter', 'latex', 'FontSize', fs);
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    set(gcf, 'Position', [100, 100, 400, 400]); 
     grid on;
-    legend('Difference', 'Regression Line', 'Interpreter', 'latex', 'FontSize', fs);
     
-    % Display slope
     disp(['Exponential convergence rate: ', num2str(slope)]);
 
 
 
 %% --- Function generating the finite Capacitance matrix
-
 
 function capmat = Capacitance(N, s, gamma,  ell)
     
