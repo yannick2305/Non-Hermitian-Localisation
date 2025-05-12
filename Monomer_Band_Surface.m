@@ -18,7 +18,7 @@ close all;
 
     lw = 6;             % Linewidth of the spectral band
     fs = 26;            % Fontsize plot annotation
-    N_mesh = 50;       % Number of discretisation points for the surface
+    N_mesh = 50;        % Number of discretisation points for the surface
     N_line = 100;       % Number of discretisation points for spectral band
 
     % --- Initialise mesh ---
@@ -42,8 +42,8 @@ close all;
     z_offset = 3e-3;
     
     mesh(Alpha, Beta, real_part - z_offset, imag_part);  
-    xlabel('$\alpha$',            'Interpreter', 'latex', 'FontSize', fs+4);
-    ylabel('$\beta$',             'Interpreter', 'latex', 'FontSize', fs+4);
+    xlabel('$\alpha$',                    'Interpreter', 'latex', 'FontSize', fs+4);
+    ylabel('$\beta$',                     'Interpreter', 'latex', 'FontSize', fs+4);
     zlabel('$Re(\omega^{\alpha,\beta})$', 'Interpreter', 'latex', 'FontSize', fs+5);
 
     colorbar; 
@@ -61,10 +61,10 @@ close all;
 
     ax = gca;
     ax.TickLabelInterpreter = 'latex';
-    ax.FontSize = fs+5;
+    ax.FontSize = fs + 5;
 
 % --- Real spectral band ---
-    beta_fixed = -gamma * l1 /2;
+    beta_fixed = - gamma * l1 / 2;
     alpha = linspace(-pi, pi,  N_line);
     
     z_line = alpha + 1i * beta_fixed;
@@ -80,7 +80,7 @@ close all;
 % --- Plot gap band below ---
 
     % --- Band at alpha = pi ---
-    beta = linspace(-gamma/2, 0,  N_line);
+    beta = linspace(- gamma / 2, 0,  N_line);
     alpha_fixed = 0;
 
     z_line_2 = alpha_fixed + 1i * beta;
@@ -95,7 +95,7 @@ close all;
 % --- Plot gap band above ---
     add = 0.5;
     % --- Band at alpha = pi ---
-    beta = linspace(-gamma/2- add, add,  N_line);
+    beta = linspace(- gamma / 2 - add, add,  N_line);
     alpha_fixed = pi;
 
     z_line_2 = alpha_fixed + 1i * beta;
