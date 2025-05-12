@@ -38,3 +38,6 @@ In the subwavelength regime, the complex quasiperiodic capacitance matrix enable
 <p align="center"> <img src="Figures/Defect_resonance_dimer.png" alt="BandMonomer" width="300"/> </p>
 
 <p align="center"> <img src="Figures/Decay_lengths_dimer.png" alt="BandMonomer" width="300"/> </p>
+
+
+<p align="center"> <img src="Figures/Regions_Non_Hermitian_Hamiltonian.png" alt="BandMonomer" width="300"/> </p>
