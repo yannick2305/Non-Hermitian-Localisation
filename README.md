@@ -19,3 +19,22 @@ In the subwavelength regime, the complex quasiperiodic capacitance matrix enable
 <p align="center"> <img src="Figures/Band_surface.png" alt="BandMonomer" width="600"/> </p>
 
 
+- `Monomer_Band.m`
+<p align="center"> <img src="Figures/Band_Monomer.png" alt="BandMonomer" width="300"/> </p>
+
+- `Dimer_Band.m`
+<p align="center"> <img src="Figures/Band_Dimer.png" alt="BandMonomer" width="300"/> </p>
+
+
+<p align="center"> <img src="Figures/Defected_resonator_chain.png" alt="BandMonomer" width="1000"/> </p>
+
+<p align="center"> <img src="Figures/Schematic_Spectrum.png" alt="BandMonomer" width="600"/> </p>
+
+
+<p align="center"> <img src="Figures/Defect_resonance_monomer.png" alt="BandMonomer" width="300"/> </p>
+
+<p align="center"> <img src="Figures/Decay_lengths_monomer.png" alt="BandMonomer" width="300"/> </p>
+
+<p align="center"> <img src="Figures/Defect_resonance_dimer.png" alt="BandMonomer" width="300"/> </p>
+
+<p align="center"> <img src="Figures/Decay_lengths_dimer.png" alt="BandMonomer" width="300"/> </p>
