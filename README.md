@@ -9,6 +9,10 @@ Date: 15.05.2025
 In this computational notebook, we provide the MATLAB code for the computations in [1].
 
 ## Complex Quasiperiodic Gauge Capacitance matrix:
+We inverstigate the non-Hermitian skin effect under qusiperiodic boundary consitions
+
+<p align="center"> <img src="Figures/Quasiperiodic_Skin_effect.png" alt="BandMonomer" width="400"/> </p>
+
 
 ### Subwavelength Regime
 In a setting where $0 < \delta \ll 1$, we seek non-trivial eigenfrequencies for the Helmholtz scattering problem such that $\omega(\delta)\to 0$, as $\delta \to 0$.
