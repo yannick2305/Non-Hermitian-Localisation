@@ -16,6 +16,7 @@ In a setting where $0 < \delta \ll 1$, we seek non-trivial eigenfrequencies for 
 #### Quasiperiodic Capacitance
 In the subwavelength regime, the complex quasiperiodic capacitance matrix enables us to derive explicit formulas for the band and gap functions.
 - `Monomer_Band_Surface.m`
+
 <p align="center"> <img src="Figures/Band_surface.png" alt="BandMonomer" width="600"/> </p>
 
 
@@ -30,6 +31,7 @@ In the subwavelength regime, the complex quasiperiodic capacitance matrix enable
 
 
 ## II. Defected Resonator chians  
+A defected monomer chain of $N$ one-dimensional subwavelength resonators, with length $\ell$ and spacing $s$. The wave speed inside the resonators is $v = 1$ whereas in the defected resonator the speed is $\tilde{v} = 1 + \eta.$
 <p align="center"> <img src="Figures/Defected_resonator_chain.png" alt="BandMonomer" width="1000"/> </p>
 
 - `Defected_Spectral_Convergence.m`
