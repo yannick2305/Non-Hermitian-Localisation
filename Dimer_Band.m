@@ -10,28 +10,30 @@ clear all;
 close all;
 
 % --- Define fixed parameters ---
-    gamma = 2;          % Gauge potential
+    gamma = 3;          % Gauge potential
     delta = 0.001;      % Contrast parameter
     ell   = [1, 1];     % Resonator lengths
     s     = [1, 2];     % Resonator spacings
-    N     = 5000;       % Number of plotting points
+    N     = 300;        % Number of plotting points
     fs    = 18;         % Fontsize of the plot annotation 
     lw    = 2.5;        % Width of the bands
 
+    search_range = 300000;
+
     % --- Normalise the unit cell to L = 1 ---
-    s   = (0.5 / (s(1) + s(2))) * s;
+    s   = (0.5 / (s(1)   + s(2)))   * s;
     ell = (0.5 / (ell(1) + ell(2))) * ell;
 
     L = sum(ell) + sum(s);
 
 % --- Generate the spectral bands ---
     % --- Compute the constant decay within the bands ---
-    beta_fixed =  - sum(ell) * gamma / 2 ; 
+    beta_fixed = sum(ell) * gamma / 2 ; 
 
     % --- initialise plotting range for band/gap functions ---
     alpha_vals   = linspace(-pi, pi, N);
     beta_vals_1  = linspace(-3 + beta_fixed,  3 + beta_fixed, N);
-    beta_vals_2  = linspace(- 2 + beta_fixed, 2 + beta_fixed, N);
+    beta_vals_2_fine  = linspace(- 2 + beta_fixed, 2 + beta_fixed, search_range);
     
     band_functions = zeros(2, N);
 
@@ -45,14 +47,14 @@ close all;
     % --- Mark the limit of the spectrum ---
     C = quasiperiodic_capacitance_matrix(pi, beta_fixed, gamma, ell, s);
     lower_gaps = real(sqrt( delta * eig(C)));
-    C = quasiperiodic_capacitance_matrix(0, beta_fixed, gamma, ell, s);
+    C = quasiperiodic_capacitance_matrix(0,  beta_fixed, gamma, ell, s);
     upper_gaps = real(sqrt( delta * eig(C)));
 
 % --- Generate gap bands ---
     % --- Gap band for alpha = 0 ---
     alpha_0 = 0;
     gap_functions_1 = zeros(2, N);
-    
+
     for k = 1:N
         beta_gap = beta_vals_1(k);
         C = quasiperiodic_capacitance_matrix(alpha_0, beta_gap, gamma, ell, s);
@@ -62,7 +64,7 @@ close all;
     
         for j = 1:min(length(ev), size(gap_functions_1, 1))
             lambda = ev(j);
-            if abs(imag(lambda)) < 1e-3 && real(lambda) >= - 1e-3
+            if abs(imag(lambda)) < 1e-3 && real(lambda) >= - 1e-2
                 gap_functions_1(j, k) = sqrt(delta * real(lambda));
         
             end
@@ -70,8 +72,32 @@ close all;
     end
     
     % --- Gap band for alpha = pi ---
+    alpha_pi  = pi;
+    is_real_2 = false(1, search_range);  
+    
+    for k = 1:search_range
+        beta_gap = beta_vals_2_fine(k);
+        C = quasiperiodic_capacitance_matrix(alpha_pi, beta_gap, gamma, ell, s);
+        ev = eig(C);
+    
+        for j = 1:length(ev)
+            lambda = ev(j);
+            if abs(imag(lambda)) < 1e-5 && real(lambda) >= -2e-1
+                is_real_2(k) = true;
+                break;
+            end
+        end
+    end
+    
+    % --- extract interval where bands are real ---
+    onset_indices_2  = find(diff([false, is_real_2]) == 1);
+    offset_indices_2 = find(diff([is_real_2, false]) == -1);
+    real_intervals_2 = [beta_vals_2_fine(onset_indices_2); beta_vals_2_fine(offset_indices_2)];
+    
+    % --- Gap band for alpha = pi ---
     alpha_pi = pi;
     gap_functions_2 = zeros(2, N);
+    beta_vals_2  = linspace(real_intervals_2(1, 1), real_intervals_2(2, 1), N);
     
     for k = 1:N
         beta_gap = beta_vals_2(k);
@@ -144,11 +170,8 @@ function C = quasiperiodic_capacitance_matrix(alpha, beta, gamma, ell, s)
     % Corner correction
     
     % i = 2, j = 1
-    C(2,1) = C(2,1) - exp(-1i*(alpha + 1i*beta)*L) * (gamma / s(2)) * ell(1)/(1-exp(-gamma* ell(1)));
+    C(2,1) = C(2,1) - exp(+1i*(alpha + 1i*beta)*L) * (gamma / s(2)) * ell(1)/(1-exp(-gamma* ell(1)));
 
     % i = 1, j = 2
-    C(1,2) = C(1,2) + exp( 1i*(alpha + 1i*beta)*L) * (gamma / s(2)) * ell(2)/(1 - exp(gamma*ell(2)));
+    C(1,2) = C(1,2) + exp(-1i*(alpha + 1i*beta)*L) * (gamma / s(2)) * ell(2)/(1 - exp(gamma*ell(2)));
 end
-
-
-
