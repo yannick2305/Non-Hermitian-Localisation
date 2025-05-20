@@ -10,23 +10,22 @@ clear all;
 close all;
 
 % --- Define fixed parameters ---
-    gamma = 3;          % Gauge potential
-    delta = 0.001;      % Contrast parameter
-    s1 = 0.5;           % Spacing betweeen the resonators
-    l1 = 0.5;           % Length of the resonators
-    L  = s1 + l1;       % Length of the unit cell
-
-    lw = 6;             % Linewidth of the spectral band
-    fs = 26;            % Fontsize plot annotation
+    gamma  = 3;         % Gauge potential
+    delta  = 0.001;     % Contrast parameter
+    s1     = 0.5;       % Spacing betweeen the resonators
+    l1     = 0.5;       % Length of the resonators
+    L      = s1 + l1;   % Length of the unit cell
+    lw     = 6;         % Linewidth of the spectral band
+    fs     = 26;        % Fontsize plot annotation
     N_mesh = 50;        % Number of discretisation points for the surface
     N_line = 100;       % Number of discretisation points for spectral band
 
     % --- Initialise mesh ---
     alpha = linspace(-pi, pi, N_mesh);                  
-    beta  = linspace(-1.5, 0, N_mesh);
+    beta  = linspace(0,  1.5, N_mesh);
     [Alpha, Beta] = meshgrid(alpha, beta);
 
-    z = Alpha + 1i * Beta;
+    z = Alpha - 1i * Beta;
 
     % --- Compute the spectral bands ---
     term1 = (1 - exp(-1i * z * L)) ./ (1 - exp(-gamma * l1));
@@ -61,15 +60,15 @@ close all;
 
     ax = gca;
     ax.TickLabelInterpreter = 'latex';
-    ax.FontSize = fs + 5;
+    ax.FontSize = fs+5;
 
 % --- Real spectral band ---
-    beta_fixed = - gamma * l1 / 2;
+    beta_fixed = gamma * l1 /2;
     alpha = linspace(-pi, pi,  N_line);
     
-    z_line = alpha + 1i * beta_fixed;
-    term1_line = (1 - exp(-1i * z_line * L)) ./ (1 - exp(-gamma * l1));
-    term2_line = (exp(1i * z_line * L) - 1) ./ (1 - exp(gamma * l1));
+    z_line = alpha - 1i * beta_fixed;
+    term1_line  = (1 - exp(-1i * z_line * L)) ./ (1 - exp(-gamma * l1));
+    term2_line  = (exp(1i * z_line * L) - 1)  ./ (1 - exp( gamma * l1));
     w_beta_line = (gamma * l1) / s1 * (term1_line + term2_line);
     w_beta_line = sqrt(delta * w_beta_line);
 
@@ -80,13 +79,13 @@ close all;
 % --- Plot gap band below ---
 
     % --- Band at alpha = pi ---
-    beta = linspace(- gamma / 2, 0,  N_line);
+    beta = linspace(0, gamma/2, N_line);
     alpha_fixed = 0;
 
-    z_line_2 = alpha_fixed + 1i * beta;
+    z_line_2 = alpha_fixed - 1i * beta;
     
-    term1_line = (1 - exp(-1i * z_line_2 * L)) ./ (1 - exp(-gamma * l1));
-    term2_line = (exp(1i * z_line_2 * L) - 1) ./ (1 - exp(gamma * l1));
+    term1_line  = (1 - exp(-1i * z_line_2 * L)) ./ (1 - exp(-gamma * l1));
+    term2_line  = (exp(1i * z_line_2 * L) - 1)  ./ (1 - exp( gamma * l1));
     w_beta_line = (gamma * l1) / s1 * (term1_line + term2_line);
     w_beta_line = sqrt(delta * w_beta_line);
 
@@ -95,10 +94,10 @@ close all;
 % --- Plot gap band above ---
     add = 0.5;
     % --- Band at alpha = pi ---
-    beta = linspace(- gamma / 2 - add, add,  N_line);
+    beta = linspace(- add, gamma/2 + add,  N_line);
     alpha_fixed = pi;
 
-    z_line_2 = alpha_fixed + 1i * beta;
+    z_line_2 = alpha_fixed - 1i * beta;
     
     term1_line = (1 - exp(-1i * z_line_2 * L)) ./ (1 - exp(-gamma * l1));
     term2_line = (exp(1i * z_line_2 * L) - 1) ./ (1 - exp(gamma * l1));
@@ -108,13 +107,13 @@ close all;
     plot3(alpha_fixed * ones(size(alpha)), beta,  real(w_beta_line), 'k-', 'LineWidth', lw);
     
     % --- Band at alpha = -pi ---
-    beta = linspace(-gamma/2 - add, add,  N_line);
+    beta = linspace(- add, gamma/2 + add,  N_line);
     alpha_fixed = -pi;
 
-    z_line_2 = alpha_fixed + 1i * beta;
+    z_line_2 = alpha_fixed - 1i * beta;
     
-    term1_line = (1 - exp(-1i * z_line_2 * L)) ./ (1 - exp(-gamma * l1));
-    term2_line = (exp(1i * z_line_2 * L) - 1) ./ (1 - exp(gamma * l1));
+    term1_line  = (1 - exp(-1i * z_line_2 * L)) ./ (1 - exp(-gamma * l1));
+    term2_line  = (exp(1i * z_line_2 * L) - 1)  ./ (1 - exp( gamma * l1));
     w_beta_line = (gamma * l1) / s1 * (term1_line + term2_line);
     w_beta_line = sqrt(delta * w_beta_line);
 
@@ -125,4 +124,5 @@ close all;
     axis tight;
 
     %exportgraphics(gcf, 'Monomer_surface.pdf', 'ContentType', 'vector');
-    %exportgraphics(gcf, 'Monomer_surface_s.pdf', 'Resolution', 300);
+    exportgraphics(gcf, 'Monomer_surface_s.pdf', 'Resolution', 300);
+
