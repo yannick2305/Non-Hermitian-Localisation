@@ -6,8 +6,8 @@
     --------------------------------------------------------------
 %}
 
-clear all;
-close all;
+    clear all;
+    close all;
 
 % --- Define fixed parameters ---
     gamma  = 3;         % Gauge potential
