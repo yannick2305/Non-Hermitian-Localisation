@@ -27,31 +27,31 @@
 
 % --- Lower Gap function ---
     alpha_fixed = 0; 
-    beta_lower_gap = linspace(-gamma*l1 , 0, Nx);
-    w_beta_lower_gap = (gamma * l1)/s1 * ( (1 - exp(-1i*(alpha_fixed + 1i* beta_lower_gap)*L)) / (1 - exp(-gamma * l1)) + (exp(1i*(alpha_fixed + 1i* beta_lower_gap)*L)-1) / (1-exp(gamma*l1)) );
+    beta_lower_gap = linspace(0, gamma*l1, Nx);
+    w_beta_lower_gap = (gamma * l1)/s1 * ( (1 - exp(+1i*(alpha_fixed + 1i* beta_lower_gap)*L)) / (1 - exp(-gamma * l1)) + (exp(-1i*(alpha_fixed + 1i* beta_lower_gap)*L)-1) / (1-exp(gamma*l1)) );
     w_beta_lower_gap = sqrt(delta *  abs(w_beta_lower_gap));
 
     % --- Limit of lower gap ---
-    Lower_gap = (gamma * l1)/s1 * ( (1 - exp(-1i*(0 + 1i* (-gamma*l1/2))*L)) / (1 - exp(-gamma * l1)) + (exp(1i*(0 + 1i* (-gamma*l1/2))*L)-1) / (1-exp(gamma*l1)) );
+    Lower_gap = (gamma * l1)/s1 * ( (1 - exp(+1i*(0 + 1i* (gamma*l1/2))*L)) / (1 - exp(-gamma * l1)) + (exp(-1i*(0 + 1i* (gamma*l1/2))*L)-1) / (1-exp(gamma*l1)) );
     Lower_gap = sqrt(delta * abs(Lower_gap));
 
 % --- Upper Gap function ---
     alpha_fixed_2 = pi;
     beta_upper_gap = linspace(-3, 3, Nx);
-    w_beta_upper_gap = (gamma * l1)/s1 * ( (1 - exp(-1i*(alpha_fixed_2 + 1i* beta_upper_gap)*L)) / (1 - exp(-gamma * l1)) + (exp(1i*(alpha_fixed_2 + 1i* beta_upper_gap)*L)-1) / (1-exp(gamma*l1)) );
+    w_beta_upper_gap = (gamma * l1)/s1 * ( (1 - exp(+1i*(alpha_fixed_2 + 1i* beta_upper_gap)*L)) / (1 - exp(-gamma * l1)) + (exp(-1i*(alpha_fixed_2 + 1i* beta_upper_gap)*L)-1) / (1-exp(gamma*l1)) );
     w_beta_upper_gap = sqrt(delta * abs(w_beta_upper_gap));
 
 % --- Band function ---
-    beta_fixed = - (gamma * l1/2);
+    beta_fixed =  gamma * l1/2;
     alpha = linspace(-pi, pi, Nx);
-    w_alpha = (gamma * l1)/s1 * ( (1 - exp(-1i*(alpha + 1i* beta_fixed)*L)) / (1 - exp(-gamma * l1)) + (exp(1i*(alpha + 1i* beta_fixed)*L)-1) / (1-exp(gamma*l1)) );
+    w_alpha = (gamma * l1)/s1 * ( (1 - exp(+1i*(alpha + 1i* beta_fixed)*L)) / (1 - exp(-gamma * l1)) + (exp(-1i*(alpha + 1i* beta_fixed)*L)-1) / (1-exp(gamma*l1)) );
     w_alpha = sqrt(delta * abs(w_alpha));
 
     % --- Limit of upper gap ---
-    Upper_gap = real((gamma * l1)/s1 * ( (1 - exp(-1i*(pi + 1i* beta_fixed)*L)) / (1 - exp(-gamma * l1)) + (exp(1i*(pi + 1i* beta_fixed)*L)-1) / (1-exp(gamma*l1)) )); 
+    Upper_gap = real((gamma * l1)/s1 * ( (1 - exp(+1i*(pi + 1i* beta_fixed)*L)) / (1 - exp(-gamma * l1)) + (exp(-1i*(pi + 1i* beta_fixed)*L)-1) / (1-exp(gamma*l1)) )); 
     Upper_gap = sqrt(delta * abs(Upper_gap));
     
-    w_beta_0 = (gamma * l1)/s1 * ( (1 - exp(-1i*(alpha_fixed_2 + 1i* 0)*L)) / (1 - exp(-gamma * l1)) + (exp(1i*(alpha_fixed_2 + 1i* 0)*L)-1) / (1-exp(gamma*l1)) );
+    w_beta_0 = (gamma * l1)/s1 * ( (1 - exp(+1i*(alpha_fixed_2 + 1i* 0)*L)) / (1 - exp(-gamma * l1)) + (exp(-1i*(alpha_fixed_2 + 1i* 0)*L)-1) / (1-exp(gamma*l1)) );
     w_beta_0 = sqrt(delta * abs(w_beta_0));
 
     disp('----------------------------------------');
@@ -73,18 +73,17 @@
  
     plot(beta_lower_gap, real(w_beta_lower_gap), 'r', 'LineWidth', lw);
   
-    
-    plot(alpha,          real(w_alpha),          'k',  'LineWidth', lw);
-    plot(beta_upper_gap, real(w_beta_upper_gap), 'r',  'LineWidth', lw);
+    plot(alpha,          real(w_alpha),          'k', 'LineWidth', lw);
+    plot(beta_upper_gap, real(w_beta_upper_gap), 'r', 'LineWidth', lw);
 
     % --- Plot fixed alpha and beta in the bands ---
     plot([0 0],                     [0 Lower_gap],             'k-', 'LineWidth', 1); 
     plot([pi pi],                   [Upper_gap 3 * Upper_gap], 'k-', 'LineWidth', 1);
     plot([-pi -pi],                 [Upper_gap 3 * Upper_gap], 'k-', 'LineWidth', 1);
-    plot([-gamma*l1/2 -gamma*l1/2], [Lower_gap  Upper_gap],    'r-', 'LineWidth', 1);
+    plot([gamma*l1/2, gamma*l1/2],  [Lower_gap  Upper_gap],    'r-', 'LineWidth', 1);
 
     xlim([-3.5, xlimit]);
-    ylim([0, Upper_gap * 1.4]);
+    ylim([0, Upper_gap * 1.5]);
 
     % --- LaTeX labels and ticks ---
     xlabel('$\alpha$ and $\beta$ respectively', 'Interpreter', 'latex', 'FontSize', fs);
@@ -92,7 +91,7 @@
     xticks([-pi/L, 0, pi/L]); 
     xticklabels({'$-\pi/L$', '$0$', '$\pi/L$'});
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
-    set(gcf, 'Position', [100, 100, 900, 450]); 
+    set(gcf, 'Position', [100, 100, 900, 400]); 
 
     grid off;
 
@@ -135,7 +134,7 @@
     
         idx = 1:length(v);      
         
-        inset_pos = [0.73 0.78 sizeIn sizeIn];  
+        inset_pos = [0.73 0.755 sizeIn sizeIn];  
         axInset = axes('Position', inset_pos);
         box on;
         
@@ -145,4 +144,4 @@
         %ylabel('$|u(x)|$' , 'Interpreter', 'latex', 'FontSize', 10);
         
     hold off;
-    exportgraphics(gcf, 'Spectral_plot_Regions.pdf');
+    exportgraphics(gcf, 'Spectral_plot_Regions_new.pdf');
