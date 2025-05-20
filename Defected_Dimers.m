@@ -10,20 +10,26 @@ clear all;
 close all;
 
 % --- Define the system parameters ---
-    n     = 400;        % Number of unit cells
-    gamma = 2;          % Gauge potential
+    n     = 200;        % Number of unit cells
+    gamma = 3;          % Gauge potential
     delta = 0.001;      % Contrast parameter
     nu    = 1.5;        % Change in wavespeed
     ell   = [1, 1];     % Resonator lengths
     spa   = [1, 2];     % Resonator spacings
     fs    = 18;         % Fontsize in plot annotation
+    lw    = 2.5;        % Linewidth of the spectral bands
 
+    search_range = 300000; 
+    
     % --- Set the site of the defect ---
     defect_site = floor(n/3);
 
 % --- Normalise the unit cell to L = 1 ---
     spa = (0.5 / (spa(1) + spa(2))) * spa;
     ell = (0.5 / (ell(1) + ell(2))) * ell;
+
+    spa_fix = spa;
+    ell_fix = ell;
 
     s = zeros(1, 2*n);
     l = zeros(1, 2*n);
@@ -52,7 +58,7 @@ close all;
 
 % --- Compute the limit of the spectrum ---
 
-    beta_fixed = -sum(ell) * gamma / 2;
+    beta_fixed = sum(ell) * gamma / 2;
     cap0  = quasiperiodic_capacitance_matrix(0,  beta_fixed, gamma, ell, spa);
     cappi = quasiperiodic_capacitance_matrix(pi, beta_fixed, gamma, ell, spa);
     
@@ -74,6 +80,7 @@ close all;
     end
 
     disp('----------------------------------------');
+    disp(['Defect of size eta= ', num2str(nu)]);
     disp(['Defect Frequency 1: ', num2str(def(1))]);
     disp(['Defect Frequency 2: ', num2str(def(2))]);
 
@@ -87,8 +94,8 @@ close all;
     dirac = dirac.';
 
     % --- Measure decay length of Green's function for frequency range ---
-    N_freq = 100;
-    w = linspace(0.001, 0.15, N_freq);
+    N_freq = 30;
+    w = linspace(0.001, 0.2, N_freq);
 
     decay_l = zeros(1, N_freq);
     decay_r = zeros(1, N_freq);
@@ -110,30 +117,156 @@ close all;
         p_l = polyfit(x_l, logG_l, 1);
         p_r = polyfit(x_r, logG_r, 1);
 
-        decay_l(i) = p_l(1);
-        decay_r(i) = p_r(1);
+        decay_l(i) = - 2 * p_l(1); % factor 2 because 2 resonators in unit cell
+        decay_r(i) = - 2 * p_r(1);
 
     end
 
+    % Debugging
+    %figure;
+    %plot(decay_l, w);
+    %hold on;
+    %plot(decay_r, w);
+    %hold off;
+
+% --- Compute the spectral bands ---
+    L = sum(ell_fix) + sum(spa_fix);
+
+% --- Generate the spectral bands ---
+    % --- Compute the constant decay within the bands ---
+    beta_fixed =   0.5 * sum(ell_fix) * gamma ; 
+
+    % --- initialise plotting range for band/gap functions ---
+    alpha_vals   = linspace(-pi, pi, N);
+    beta_vals_1  = linspace(-3 + beta_fixed,  3 + beta_fixed, N);
+    beta_vals_2_fine  = linspace(- 2 + beta_fixed, 2 + beta_fixed, search_range);
+    
+    band_functions = zeros(2, N);
+
+    for k = 1:N
+        alpha = alpha_vals(k);
+        C = quasiperiodic_capacitance_matrix(alpha, beta_fixed, gamma, ell_fix, spa_fix);
+        ev = eig(C); 
+        band_functions(:, k) = sqrt( delta * real(ev) );
+    end
+    
+    % --- Mark the limit of the spectrum ---
+    C = quasiperiodic_capacitance_matrix(pi, beta_fixed, gamma, ell_fix, spa_fix);
+    lower_gaps = real(sqrt( delta * eig(C)));
+
+    C = quasiperiodic_capacitance_matrix(0, beta_fixed, gamma, ell_fix, spa_fix);
+    upper_gaps = real(sqrt( delta * eig(C)));
+
+% --- Generate gap bands ---
+    % --- Gap band for alpha = 0 ---
+    alpha_0 = 0;
+    gap_functions_1 = zeros(2, N);
+
+    for k = 1:N
+        beta_gap = beta_vals_1(k);
+        C = quasiperiodic_capacitance_matrix(alpha_0, beta_gap, gamma, ell_fix, spa_fix);
+        ev = eig(C);
+    
+        gap_functions_1(:, k) = NaN(size(gap_functions_1, 1), 1);
+    
+        for j = 1:min(length(ev), size(gap_functions_1, 1))
+            lambda = ev(j);
+            if abs(imag(lambda)) < 1e-3 && real(lambda) >= - 1e-2
+                gap_functions_1(j, k) = sqrt(delta * real(lambda));
+        
+            end
+        end
+    end
+    
+    % --- Gap band for alpha = pi ---
+    alpha_pi  = pi;
+    is_real_2 = false(1, search_range); 
+    
+    % --- Find range for real valued gap functions ---
+    for k = 1:search_range
+        beta_gap = beta_vals_2_fine(k);
+        C = quasiperiodic_capacitance_matrix(alpha_pi, beta_gap, gamma, ell_fix, spa_fix);
+        ev = eig(C);
+    
+        for j = 1:length(ev)
+            lambda = ev(j);
+            if abs(imag(lambda)) < 1e-5 && real(lambda) >= -2e-1
+                is_real_2(k) = true;
+                break;
+            end
+        end
+    end
+
+    onset_indices_2  = find(diff([false, is_real_2]) ==  1);
+    offset_indices_2 = find(diff([is_real_2, false]) == -1);
+    real_intervals_2 = [beta_vals_2_fine(onset_indices_2); beta_vals_2_fine(offset_indices_2)];
+  
+    % --- Gap band for alpha = pi ---
+    alpha_pi = pi;
+    gap_functions_2 = zeros(2, N);
+    beta_vals_2  = linspace(real_intervals_2(1, 1), real_intervals_2(2, 1), N);
+    
+    for k = 1:N
+        beta_gap = beta_vals_2(k);
+        C = quasiperiodic_capacitance_matrix(alpha_pi, beta_gap, gamma, ell_fix, spa_fix);
+        ev = eig(C);
+        gap_functions_2(:, k) = NaN(size(gap_functions_2, 1), 1);
+    
+        for j = 1:min(length(ev), size(gap_functions_2, 1))
+            lambda = ev(j);
+            if abs(imag(lambda)) < 1e-2 && real(lambda) >= - 1e-2
+                gap_functions_2(j, k) = sqrt(delta * real(lambda));
+            end
+        end
+    end
+    
+    % --- Plot complex band structure an overlay decay rates ---
     figure;
-    plot(decay_l, w);
+    plot(alpha_vals,  real(band_functions(1,:)),  'k-', 'LineWidth', lw); 
     hold on;
-    plot(decay_r, w);
-    hold off;
+    plot(alpha_vals,  real(band_functions(2,:)),  'k-', 'LineWidth', lw); 
+    plot(beta_vals_1, real(gap_functions_1(1,:)), 'r-', 'LineWidth', lw); 
+    plot(beta_vals_1, real(gap_functions_1(2,:)), 'r-', 'LineWidth', lw); 
+    plot(beta_vals_2, real(gap_functions_2(1,:)), 'r-', 'LineWidth', lw);
+    plot(beta_vals_2, real(gap_functions_2(2,:)), 'r-', 'LineWidth', lw); 
 
+    yline(upper_gaps(1), 'k--', 'LineWidth', 1);
+    yline(lower_gaps(1), 'k--', 'LineWidth', 1);
+    yline(upper_gaps(2), 'k--', 'LineWidth', 1);
+    yline(lower_gaps(2), 'k--', 'LineWidth', 1); 
 
-% --- Plot the spectrum ---
+    plot(decay_l,  w, 'bx', 'MarkerSize', 8, 'LineWidth', 2);
+    plot(decay_r,  w, 'bx', 'MarkerSize', 8, 'LineWidth', 2);
+
+    plot([0 0],                   [0 upper_gaps(2)],              'k-', 'LineWidth', 1); 
+    plot([pi pi],                 [lower_gaps(2) lower_gaps(1)],  'k-', 'LineWidth', 1);
+    plot([-pi -pi],               [lower_gaps(2) lower_gaps(1)],  'k-', 'LineWidth', 1); 
+    plot([0 0],                   [upper_gaps(1) 2],              'k-', 'LineWidth', 1); 
+    plot([beta_fixed beta_fixed], [upper_gaps(2)  lower_gaps(2)], 'r-', 'LineWidth', 1);
+    plot([beta_fixed beta_fixed], [lower_gaps(1)  upper_gaps(1)], 'r-', 'LineWidth', 1);
+
+    xlabel('$\alpha$ and $\beta$ respectively', 'Interpreter', 'latex', 'FontSize', fs);
+    ylabel('$\omega^{\alpha, \beta, \gamma}$' , 'Interpreter', 'latex', 'FontSize', fs);
+    ylim([0, max(upper_gaps) * 1.2]);
+    xticks([-pi/L, 0, pi/L]); 
+    xticklabels({'$-\pi/L$', '$0$', '$\pi/L$'});
+    set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    set(gcf, 'Position', [100, 100, 500, 400]); 
+
+%%
+
+% --- Plot the resonances and defect resonances ---
     figure;
     h1 = plot(resonances, 'ko', 'LineWidth', 4, 'MarkerSize', 8); 
     hold on;
     if nu > 0
         % --- Defect in the top spectral Gap ---
         h2 = plot(n,   def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
-        plot(2*n, def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+        plot(2*n,      def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
     else
         % --- Defect in the lower spectral Gap ---
         h2 = plot(2,   def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
-        plot(n+1, def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+        plot(n+1,      def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
     end
 
     % --- Mark the quasiperiodic spectrum ---
@@ -196,7 +329,6 @@ function C = quasiperiodic_capacitance_matrix(alpha, beta, gamma, ell, s)
     L = 1; % sum(ell) + sum(s); % total length
     C = zeros(2, 2); % initialize
 
- 
     % i = j = 1
     C(1,1) = (gamma/s(1)) * (ell(1)/(1 - exp(-gamma*ell(1)))) - (gamma/s(2)) * (ell(1)/(1 - exp(gamma*ell(1))));
 
@@ -209,13 +341,11 @@ function C = quasiperiodic_capacitance_matrix(alpha, beta, gamma, ell, s)
     % i = j - 1 => i = 1, j = 2
     C(1,2) = -(gamma/s(1)) * (ell(2)/(1 - exp(-gamma*ell(1))));
 
-   
- 
     % Corner correction
     
     % i = 2, j = 1
-    C(2,1) = C(2,1) - exp(-1i*(alpha + 1i*beta)*L) * (gamma / s(2)) * ell(1)/(1-exp(-gamma* ell(1)));
+    C(2,1) = C(2,1) - exp(+1i*(alpha + 1i*beta)*L) * (gamma / s(2)) * ell(1)/(1-exp(-gamma* ell(1)));
 
     % i = 1, j = 2
-    C(1,2) = C(1,2) + exp( 1i*(alpha + 1i*beta)*L) * (gamma / s(2)) * ell(2)/(1 - exp(gamma*ell(2)));
+    C(1,2) = C(1,2) + exp(-1i*(alpha + 1i*beta)*L) * (gamma / s(2)) * ell(2)/(1 - exp(gamma*ell(2)));
 end
