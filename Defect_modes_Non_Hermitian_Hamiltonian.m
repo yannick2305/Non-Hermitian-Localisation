@@ -12,15 +12,14 @@ close all;
 % --- Parameters ---
     n           = 29;           % Dimension of Hamiltonian
     v           = 1;            % Potential
-    gamma       = 0.4;          % Gauge Potential
+    gamma       = 0.8;          % Gauge Potential
     defect_site = floor(n/2);   % Position of the defect
-    
-    fs = 16;   
-    lw = 1.5;
+    fs          = 16;           % Fontsize plot annotation
+
 
 % --- Compute the decay lengths for the defects ---
     % --- Set defect range ---
-    d_range = linspace(-4, 4, 6);
+    d_range = linspace(-4, 4, 8);
 
     % --- Manually add defects at edge of winding region ---
     d_range = [d_range, 0, -4*sinh(gamma)];
@@ -34,7 +33,7 @@ close all;
     right_decay_lengths_2 = zeros(size(d_range));
     
     for idx = 1:length(d_range)
-        d = -(2*sinh(gamma) + d_range(idx));
+        d = - (2*sinh(gamma) + d_range(idx));
  
         % --- Generate Toeplitz matrix ---
         T = generate_tridiagonal_toeplitz(n, v, gamma);
@@ -66,13 +65,13 @@ close all;
             p_left  = polyfit(x_left, left_log, 1);
             p_right = polyfit(x_right, right_log, 1);
 
-            lambda_left  = p_left(1);
-            lambda_right = p_right(1);
+            lambda_left  =  p_left(1);
+            lambda_right = -p_right(1); % minus because propagation direction is inverted (Away from defect)
         
             % --- Save the result ---
             frequencies(idx)         = max_val;
-            left_decay_lengths(idx)  = -lambda_left;
-            right_decay_lengths(idx) =  lambda_right;
+            left_decay_lengths(idx)  = lambda_left;
+            right_decay_lengths(idx) = lambda_right;
 
             invalid_idx = frequencies == 0;
             frequencies(invalid_idx)         = [];
@@ -105,8 +104,8 @@ close all;
            
             % --- Save the result ---
             frequencies_2(idx) = min_val;
-            left_decay_lengths_2(idx)  = -lambda_left_2;
-            right_decay_lengths_2(idx) =  lambda_right_2;
+            left_decay_lengths_2(idx)  =  lambda_left_2;
+            right_decay_lengths_2(idx) = -lambda_right_2;
 
             invalid_idx_2 = frequencies_2 == 0;
             frequencies_2(invalid_idx_2)         = [];
@@ -118,7 +117,7 @@ close all;
 
 % --- Generate the spectral bands ---
 
-    beta_fix     = - gamma;         
+    beta_fix     = gamma;         
     alpha_fix_0  = 0;
     alpha_fix_pi = pi;
     
@@ -127,17 +126,17 @@ close all;
     beta  = linspace(-5,   5, 1000);
     
     % --- Compute the band functions ---
-    f_alpha    = v - 2 * cos(alpha) .* cosh(gamma + beta_fix);
-    f_beta_pi  = v - 2 * cos(alpha_fix_pi) .* cosh(gamma + beta);
-    f_beta_0   = v - 2 * cos(alpha_fix_0) .* cosh(gamma + beta);
+    f_alpha    = v - 2 * cos(alpha) .* cosh(-gamma + beta_fix);
+    f_beta_pi  = v - 2 * cos(alpha_fix_pi) .* cosh(-gamma + beta);
+    f_beta_0   = v - 2 * cos(alpha_fix_0)  .* cosh(-gamma + beta);
     
     % --- Compute the limit of the spectrum ---
-    Upper_gap = v - 2 * cos(pi) .* cosh(gamma + beta_fix);
-    Lower_gap = v - 2 * cos(0) .* cosh(gamma + beta_fix);
+    Upper_gap = v - 2 * cos(pi) .* cosh(-gamma + beta_fix);
+    Lower_gap = v - 2 * cos(0)  .* cosh(-gamma + beta_fix);
 
     % --- Compute the limit of the winding region ---
-    Limit_winding_top    = v - 2 * cos(alpha_fix_pi) .* cosh(gamma + 0); 
-    Limit_winding_bottom = v - 2 * cos(alpha_fix_0) .* cosh(gamma + 0); 
+    Limit_winding_top    = v - 2 * cos(alpha_fix_pi) .* cosh(-gamma + 0); 
+    Limit_winding_bottom = v - 2 * cos(alpha_fix_0)  .* cosh(-gamma + 0); 
 
     % --- Plot the Band functions ---
     figure;
@@ -149,20 +148,20 @@ close all;
     y_coords_2 = [ Upper_gap Upper_gap Lower_gap Lower_gap];
     y_coords_3 = [ -4 -4 Limit_winding_bottom Limit_winding_bottom];
 
-    fill(x_coords, y_coords, [0.95 0.95 1]);      % lighter blue
+    fill(x_coords, y_coords,   [0.95 0.95 1.00]);  % light blue
     hold on;
-    fill(x_coords, y_coords_1, [0.9 0.95 0.85] ); % lighter green
-    fill(x_coords, y_coords_3, [0.9 0.95 0.85] );
-    fill(x_coords, y_coords_2, [0.95 0.8 0.9]);   % lighter pink/purple
+    fill(x_coords, y_coords_1, [0.90 0.95 0.85]);  % light green
+    fill(x_coords, y_coords_3, [0.90 0.95 0.85]);
+    fill(x_coords, y_coords_2, [0.95 0.80 0.90]);  % light purple
 
     plot(alpha, f_alpha, 'k', 'LineWidth', 3);
     
     plot(beta,            f_beta_pi,                 'r-', 'LineWidth', 3);
     plot(beta,            f_beta_0,                  'r-', 'LineWidth', 3);
-    plot([0 0],           [Lower_gap-3 Lower_gap],   'k-', 'LineWidth', 1); 
-    plot([pi pi],         [Upper_gap 3 * Upper_gap], 'k-', 'LineWidth', 1);
-    plot([-pi -pi],       [Upper_gap 3 * Upper_gap], 'k-', 'LineWidth', 1);
-    plot([-gamma -gamma], [Lower_gap  Upper_gap],    'r-', 'LineWidth', 1);
+    plot([0 0],           [Lower_gap-3 Lower_gap],   'k-', 'LineWidth', 2); 
+    plot([pi pi],         [Upper_gap 3 * Upper_gap], 'k-', 'LineWidth', 2);
+    plot([-pi -pi],       [Upper_gap 3 * Upper_gap], 'k-', 'LineWidth', 2);
+    plot([gamma gamma],   [Lower_gap  Upper_gap],    'r-', 'LineWidth', 2);
 
     % --- Add the decay lengths ---
     plot(left_decay_lengths(1:end-1),    frequencies(1:end-1),   'bx', 'LineWidth', 4, 'MarkerSize', 8);
@@ -184,11 +183,11 @@ close all;
     xlabel('$\alpha$ and $\beta$ respectively',  'Interpreter', 'latex', 'FontSize', fs);
     ylabel('$\lambda^{\alpha, \beta, \gamma}$' , 'Interpreter', 'latex', 'FontSize', fs);
     xlim([-3.5, 3.5]);
-    ylim([-3, 5]);
+    ylim([-3.0, 5.0]);
     
     % --- Set LaTeX-formatted ticks ---
     xticks([-pi, 0, pi]); 
-    xticklabels({'$-\pi$', '$0$', '$\pi$'});
+    xticklabels({'$-\pi/L$', '$0$', '$\pi/L$'});
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
     set(gcf, 'Position', [100, 100, 500, 400]);  
 
@@ -196,11 +195,9 @@ close all;
 %% --- Define the functions ---
 
 function T = generate_tridiagonal_toeplitz(n, v, gamma)
-    % Create the diagonals
-    main_diag = v * ones(n, 1);             % v on the main diagonal
-    below_diag = -exp(-gamma) * ones(n-1, 1); % -e^{-gamma} on the subdiagonal
-    above_diag = -exp(gamma) * ones(n-1, 1);  % -e^{gamma} on the superdiagonal
+    main_diag  = v * ones(n, 1);           
+    below_diag = -exp(-gamma) * ones(n-1, 1);
+    above_diag = -exp( gamma) * ones(n-1, 1);  
 
-    % Create the tridiagonal Toeplitz matrix
     T = diag(main_diag) + diag(below_diag, -1) + diag(above_diag, 1);
 end
