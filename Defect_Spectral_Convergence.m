@@ -1,239 +1,269 @@
 %{
     --------------------------------------------------------------
     Author(s):    [Erik Orvehed HILTUNEN , Yannick DE BRUIJN]
-    Date:         [March 2025]
-    Description:  [Finite Defected system]
+    Date:         [May 2025]
+    Description:  [Spectral Convergence and Pseudospectrum]
     --------------------------------------------------------------
 %}
 
-    close all;
     clear all;
+    close all;
 
-% --- Parameters ---
-    n     = 300;                % Number of unit cells in the chain
-    l1    = 0.5;                % Length of a monomer resonator
-    s1    = 0.5;                % Spacing of a monomer resonator
-    gamma = 3.2422;             % Gauge potential
-    eta   = 1.9;                % Defect parameter (change in wavespeed)
-    delta = 0.001;              % Contrast
-    fs = 18;                    % Fontsize in the plot
-    lw = 3;                     % Linewidth of the modes plot
-
+% --- Define fixed parameters ---
+    gamma = 1;          % Gauge potential
+    delta = 0.001;      % Contrast parameter
+    s1    = 0.5;        % Spacing betweeen the resonators
+    l1    = 0.5;        % Length of the resonators
+    L     = s1 + l1;    % Length of the unit cell
+    Nx    = 1000;       % Number of plotting points in the bands
+    fs    = 18;         % Fontsize in plot annotation
+    lw    = 3;          % Linewidth of spectral bands
+    
     % --- Renormalise the lengths ---
-    L  = l1 + s1;
     s1 = s1 / L;
     l1 = l1 / L;
     L  = 1;
 
-% --- Find optimal defect size for cloaking ---
-    % --- Compute the spectral bands ---
+% --- Generate the band betaTilde ---
     a = (gamma / s1) * (l1 / (1 - exp(-gamma * l1))) - (gamma / s1) * (l1 / (1 - exp(gamma * l1)));
     b =  gamma / s1  *  l1 / (1 - exp( gamma * l1));
     c = -gamma / s1  *  l1 / (1 - exp(-gamma * l1));
-    
+
     a = delta * a;
     b = delta * b;
     c = delta * c;
-    
-    % --- Find limit of the winding region ---
-    alpha_fixed_2 = pi;
-    w_beta_0 = (gamma * l1)/s1 * ( (1 - exp(-1i*(alpha_fixed_2 + 1i* 0)*L)) / (1 - exp(-gamma * l1)) + (exp(1i*(alpha_fixed_2 + 1i* 0)*L)-1) / (1-exp(gamma*l1)) );
-    w_beta_0 = sqrt(delta * abs(w_beta_0));
 
-    func = @(eta) sqrt((a * (eta + 1)^2 + sign(eta) * sqrt((eta + 1)^2 * (a^2 * eta^2 + 8 * b * c * eta + 4 * b * c))) / (2 * eta + 1)) - w_beta_0;
-    
-    eta0 = 1;  % Initial Guess
-    options = optimoptions('fsolve', 'Display', 'off');
-    eta_solution = fsolve(func, eta0, options);
-    
-    % Display result
-    disp('----------------------------------------');
-    fprintf('Cloaking eta:     %.6f\n', eta_solution);
+    r = 0.5 * gamma * l1;
 
-    eta = eta_solution;
+    lambda = linspace(0, 0.2^2, 1000);
+    betaTilde = acosh(-(a-lambda) ./ (2*b* exp(r)));
 
-% --- Compute the resonances of the defected monomer chain ---
 
-    % --- Initialise resonator chain ---
-    l = l1 * ones(1, n);
-    s = s1 * ones(1, n);
-        
-    % --- Generate Capacitance matrix of pristine structure ---
-    capmat = Capacitance(n, s, gamma, l);
-          
-    % --- Define defect Matrix ---
-    D = eye(n);
-    defect_site = floor(n/2);
-    D(defect_site, defect_site) = 1 + eta;
+%% --- Compute Frequency convergence ---
 
-    Def = D * capmat;
-
-    %% --- Truncate eigenvector as Pseudoeigenvector estimate ---
-
-    n_values = 10:4:300;  % Truncation sizes
-    first_entries = zeros(size(n_values));  
+            % System size and eta range
+    N        = 12;
+    sizes    = 10:2:N+2;
+    etas     = linspace(0.1, 5, 10); 
+    slopes   = zeros(size(etas));
+    w_closed = zeros(size(etas));
     
-    for idx = 1:length(n_values)
-        
-        n = n_values(idx);
-        l = l1 * ones(1, n);
-        s = s1 * ones(1, n);
+    % Loop over eta
+    for j = 1:length(etas)
+        eta = etas(j);
     
-        % --- Generate Capacitance matrix of pristine structure ---
-        capmat = Capacitance(n, s, gamma, l);
+        % --- Closed form defect resonance ---
+        w_def_closed_form = sqrt(...
+            (a * (eta + 1)^2 + eta/abs(eta) * sqrt((eta + 1)^2 * (a^2 * eta^2 + 8 * b * c * eta + 4 * b * c))) ...
+            / (2 * eta + 1) );
     
-        % --- Define defect Matrix ---
-        D = eye(n);
-        defect_site = floor(n / 2);
-        D(defect_site, defect_site) = 1 + eta;
+        w_closed(j) = w_def_closed_form;
     
-        Def = D * capmat;
+        res = zeros(1, length(sizes));
+        idx = 1;
     
-        % --- Compute eigenvalues and eigenvectors ---
-        [V, E] = eig(Def);
-        [~, max_idx] = max(abs(diag(E)));  % Defect eigenfrequency
-        
-        v_max = V(:, max_idx);             % Defect eigenvector
-        v_max = v_max / norm(v_max);       % Normalize eigenvector 
-        
-        first_entries(idx) = v_max(1);     % Store first entry
-    end
+        % Loop over system sizes
+        for n = sizes
+            defect_site = floor(n/2);
+            l = l1 * ones(1, n);
+            s = s1 * ones(1, n);
+            capmat = Capacitance(n, s, gamma, l);
+            D = eye(n);
+            D(defect_site, defect_site) = 1 + eta;
+            Def = D * capmat;
     
-    % --- Plot the result ---
-    figure;
-    loglog(n_values, abs(real(first_entries)), '-o');
-    xlabel('n (matrix size)');
-    ylabel('First entry of eigenvector with max eigenfrequency');
-    title('First Entry vs. Matrix Size');
-    grid on;
-
-    % --- Determine algebraic decay rate ---
-    x = n_values(:);                        
-    y = abs(real(first_entries(:)));         
-    logx = log10(x);
-    logy = log10(y);
+            [~, eigenvalues_matrix] = eig(Def);
+            eigenvalues = sort(abs(diag(eigenvalues_matrix)));
+            resonances  = sqrt(eigenvalues * delta);
     
-    p = polyfit(logx, logy, 1);
-    slope = p(1);
-    
-    fprintf('Algebraic decay rate: %.4f\n', slope);
-
-%% --- Convergence of the defect eigenfrequency ---
-
-    N   = 32;   % Range of the system sizes
-    eta = 0.5;  % Defect size 
-    % --- Cosed form of defect resonance in infinite chain ---
-    w_def_closed_form = sqrt((a * (eta + 1)^2 + eta/abs(eta) * sqrt((eta + 1)^2 * (a^2 * eta^2 + 8 * b * c * eta + 4 * b * c))) / (2 * eta + 1)); 
-    fprintf('--------------------------------------\n');
-    disp(['Closed Sol:        ',  num2str(w_def_closed_form)]);
-    fprintf('Cloaking eta:      %.6f\n', eta);
-    
-    non_reciprocity = 0.5 * gamma * l1;
-    fprintf('Non-reciprocity:   %.6f\n', non_reciprocity);
-
-    % --- Iterate over chain sizes ---
-    sizes = 10:2:N+2; 
-    res   = ones(1, length(sizes));
-    idx   = 1;
-    
-    for n = sizes
-        % --- Generate defected capacitance matrix ---
-        defect_site = floor(n/2);
-        l = l1 * ones(1, n);
-        s = s1 * ones(1, n);
-        capmat = Capacitance(n, s, gamma, l);
-        D = eye(n);
-        D(defect_site, defect_site) = 1 + eta;
-        Def = D * capmat;
-        
-        % --- Compute the resonances ---
-        [~, eigenvalues_matrix] = eig(Def);
-        eigenvalues = sort(diag(eigenvalues_matrix));
-        eigenvalues = abs(eigenvalues);
-        resonances  = sqrt(eigenvalues * delta);
-        if eta > 0
-            w_def = resonances(n);
-        else
-            w_def = resonances(2);
+            % Pick the right resonance based on eta sign
+            if eta > 0
+                w_def = resonances(n);
+            else
+                w_def = resonances(2);
+            end
+            res(idx) = abs(w_def - w_def_closed_form);
+            idx = idx + 1;
         end
-        res(idx) = abs(w_def - w_def_closed_form);
-        idx = idx + 1;
-        
-        [V, Dia] = eig(Def);
-        eigenvalues = diag(Dia);
-        [~, sortIdx] = sort(eigenvalues);
-        sortedEigenvectors = V(:, sortIdx);
-        %figure;
-        %plot(1:n, abs(sortedEigenvectors(:, n)), '-', 'Color', 0.65 * [1, 1, 1], 'LineWidth', lw * 1.5, 'MarkerSize', 15);
+    
+        % Compute convergence slope
+        log_res = log(res);
+        p = polyfit(sizes, log_res, 1);
+        slopes(j) = -p(1);  
     end
-    
-    % --- Fit a regression line on the semilog plot ---
-    log_res = log(res(1:end)); 
-    p = polyfit(sizes, log_res, 1); 
-    slope = p(1); 
-    
-    % --- Plot results ---
+
+
+    % --- Plot the convergence rate against beta ---
+
     figure;
-    semilogy(sizes, res(1:end), 'kx', 'LineWidth', 2, 'MarkerSize', 9);  
+    plot(real(betaTilde), sqrt(lambda),'r-', 'LineWidth', 2);
     hold on;
+    plot(slopes, w_closed, 'bx', 'MarkerSize', 8, 'LineWidth', 2);
     
-    xlabel('N',                                       'Interpreter', 'latex', 'FontSize', fs);
-    ylabel('$\bigl|\omega_0 - \omega_0^{(N)}\bigr|$', 'Interpreter', 'latex', 'FontSize', fs);
+    legend({'$\tilde{\beta}(\lambda)$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
+
+    %xlabel('$\tilde{\beta}$ and $B$ respectively', 'Interpreter', 'latex', 'FontSize', fs);
+    ylabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
+
+    ylim([0.07, 0.16]);
+
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
-    set(gcf, 'Position', [100, 100, 400, 400]); 
+    set(gcf, 'Position', [100, 100, 400, 250]); 
     grid on;
-    
-    disp(['Exponential convergence rate: ', num2str(slope)]);
 
-%% --- Truncated eigenvector as Pseudoeigenvector ---
 
-    N   = 201;
-    def = 0.1;              % Diff from tunneling defect size 
-    l   = l1 * ones(1, N);
-    s   = s1 * ones(1, N);
-            
-    % Compute large matrix to approximate Toeplitz operator
-    C = Capacitance(N, s, gamma, l);
-    D = eye(N);
-    D(floor(N/2), floor(N/2)) = 1 + eta + def;
-    C = C * D;
+%% --- Truncate Laurent Operator convergence ---
+
+    etas       = linspace(0.01, 5, 10);  
+    N          = 107;
+    n_values   = 20:4:N-60;
     
-    [v, lambda] = eigs(C, 1, 'largestabs');
     
-    n_values  = 11:4:N-2;
-    residuals = zeros(size(n_values));
+    % Preallocate storage
+    decay_slopes = zeros(size(etas));
+    lambda_ns    = zeros(size(etas));
     
-    % Loop over n and compute residuals
-    for i = 1:length(n_values)
-        n = n_values(i);
+    for j = 1:length(etas)
+        eta = etas(j);
+        pos = 3;
+        defect_pos = floor(N/pos);
     
-        Cn = Capacitance(n, s, gamma, l);
-        D = eye(n);
-        D(floor(n/2), floor(n/2)) = 1 + eta + def;
-        Cn = Cn * D;
+        % Large matrix to approximate "Operator"
+        l = l1 * ones(1, N);
+        s = s1 * ones(1, N);
+        C = Capacitance(N, s, gamma, l);
+        D = eye(N);
+        D(defect_pos, defect_pos) = 1 + eta;
+        C = C * D;
     
-        lambda_n = eigs(Cn, 1, 'largestabs');
-        
-        % Truncate the vector of operator around center
-        start_idx = floor((N - n)/2) + 1;
-        end_idx   = start_idx + n - 1;
-        v_trunc   = v(start_idx:end_idx);  
-        
-        % Compute residual
-        residual_vector = (Cn - lambda_n * eye(n)) * v_trunc;
-        residuals(i)    = norm(residual_vector) / norm(v_trunc);
+        [v, ~] = eigs(C, 1, 'largestabs'); 
+    
+        residuals = zeros(size(n_values));
+        lambda_n_vals = zeros(size(n_values));
+    
+        for i = 1:length(n_values)
+            n = n_values(i);
+            l_n = l1 * ones(1, n);
+            s_n = s1 * ones(1, n);
+    
+            Cn = Capacitance(n, s_n, gamma, l_n);
+            Dn = eye(n);
+            Dn(floor(n/pos), floor(n/pos)) = 1 + eta;
+            Cn = Cn * Dn;
+    
+            lambda_n = eigs(Cn, 1, 'largestabs');
+            lambda_n_vals(i) = lambda_n;
+    
+            % Truncate eigenvector from operator
+            start_idx = floor((N - n)/pos) + 1;
+            end_idx   = start_idx + n - 1;
+            v_trunc   = v(start_idx:end_idx);
+    
+            % Residual norm
+            residual_vector = (Cn - lambda_n * eye(n)) * v_trunc;
+            residuals(i)    = norm(residual_vector);
+        end
+    
+        % Measure exponential decay rate
+        p = polyfit(n_values, log(residuals), 1);
+        decay_slopes(j) = p(1); 
+        lambda_ns(j)    = lambda_n_vals(end); 
+    end
+    
+    figure;
+    plot(r-real(betaTilde), sqrt(lambda),'r-', 'LineWidth', 2);
+    hold on;
+    plot( decay_slopes*pos, sqrt(delta *lambda_ns), 'bx', 'MarkerSize', 8, 'LineWidth', 2);
+
+    legend({'$r-\tilde{\beta}(\lambda)$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
+
+    %xlabel('$\tilde{\beta}(\lambda) - r$ and $B$ respectively', 'Interpreter', 'latex', 'FontSize', fs);
+    ylabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
+
+    ylim([0.07, 0.16]);
+
+    xticks([-2, -1, 0, r]); 
+    xticklabels({'$-2$', '$-1$', '$0$', '$r$'});
+    set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    set(gcf, 'Position', [100, 100, 400, 250]); 
+    grid on;
+
+
+%% --- Truncate Toeplitz Operator convergence ---
+
+    % Parameters and constants
+    etas       = linspace(0.1, 5, 10); 
+    N          = 81;
+    n_values   = 30:4:N-40;
+    
+    
+    % Preallocate storage
+    decay_slopes = zeros(size(etas));
+    lambda_ns    = zeros(size(etas));
+    
+    for j = 1:length(etas)
+        eta = etas(j);
+        pos = 2;
+        defect_pos = floor(N/pos);
+    
+        % Large matrix to approximate "Operator"
+        l = l1 * ones(1, N);
+        s = s1 * ones(1, N);
+        C = Capacitance(N, s, gamma, l);
+        D = eye(N);
+        D(defect_pos, defect_pos) = 1 + eta;
+        C = C * D;
+    
+        [v, ~] = eigs(C, 1, 'largestabs'); 
+    
+        residuals = zeros(size(n_values));
+        lambda_n_vals = zeros(size(n_values));
+    
+        for i = 1:length(n_values)
+            n = n_values(i);
+            l_n = l1 * ones(1, n);
+            s_n = s1 * ones(1, n);
+    
+            Cn = Capacitance(n, s_n, gamma, l_n);
+            Dn = eye(n);
+            Dn(floor(n/pos), floor(n/pos)) = 1 + eta;
+            Cn = Cn * Dn;
+    
+            lambda_n = eigs(Cn, 1, 'largestabs');
+            lambda_n_vals(i) = lambda_n;
+    
+            % Truncate eigenvector from large matrix
+            v_trunc   = v(1:n);
+    
+            % Residual norm
+            residual_vector = (Cn - lambda_n * eye(n)) * v_trunc;
+            residuals(i)    = norm(residual_vector) ;
+        end
+    
+        % Measure exponential decay rate
+        p = polyfit(n_values, log(residuals), 1);
+        decay_slopes(j) = p(1); 
+        lambda_ns(j)    = lambda_n_vals(end); 
     end
 
-    % --- Plot the residuals ---
     figure;
-    semilogy(n_values, residuals, '-o', 'LineWidth', 2);
-    %loglog(n_values, residuals, '-o', 'LineWidth', 2);
-    xlabel('n');
-    ylabel('Residual Norm');
+    plot(real(betaTilde)-r, sqrt(lambda),'r-', 'LineWidth', 2);
+    hold on;
+    plot( decay_slopes, sqrt(delta *lambda_ns), 'bx', 'MarkerSize', 8, 'LineWidth', 2);
+    legend({'$\tilde{\beta}(\lambda)-r$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
+
+    %xlabel('$\tilde{\beta}(\lambda) - r$ and $B$ respectively', 'Interpreter', 'latex', 'FontSize', fs);
+    ylabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
+
+    ylim([0.07, 0.16]);
+
+    xticks([-r, 0, 1, 2]); 
+    xticklabels({'$-r$', '$0$', '$1$', '$2$'});
+    set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    set(gcf, 'Position', [100, 100, 400, 250]); 
     grid on;
 
-
-%% --- Function generating the finite Capacitance matrix
+%% --- Define the Capacitance Matrix ---
 
 function capmat = Capacitance(N, s, gamma,  ell)
     
@@ -268,3 +298,4 @@ function capmat = Capacitance(N, s, gamma,  ell)
         end
     end
 end
+
