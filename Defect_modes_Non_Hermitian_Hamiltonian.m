@@ -1,13 +1,13 @@
 %{
     -----------------------------------------------------------------
     Author(s):    [Erik Orvehed HILTUNEN , Yannick DE BRUIJN]
-    Date:         [Mai 2025]
+    Date:         [May 2025]
     Description:  [Spectral plot Defected non-Hermitian Hamiltonian]
     -----------------------------------------------------------------
 %}
 
-clear all;
-close all;
+    clear all;
+    close all;
 
 % --- Parameters ---
     n           = 29;           % Dimension of Hamiltonian
@@ -19,10 +19,10 @@ close all;
 
 % --- Compute the decay lengths for the defects ---
     % --- Set defect range ---
-    d_range = linspace(-4, 4, 8);
+    d_range = linspace(-10, 10, 22);
 
     % --- Manually add defects at edge of winding region ---
-    d_range = [d_range, 0, -4*sinh(gamma)];
+    d_range = [d_range, 2*sinh(gamma), -2*sinh(gamma)];
     
     % --- Initialise arrays ---
     frequencies           = zeros(size(d_range));
@@ -33,8 +33,8 @@ close all;
     right_decay_lengths_2 = zeros(size(d_range));
     
     for idx = 1:length(d_range)
-        d = - (2*sinh(gamma) + d_range(idx));
- 
+        d =  -d_range(idx);
+
         % --- Generate Toeplitz matrix ---
         T = generate_tridiagonal_toeplitz(n, v, gamma);
         T(defect_site, defect_site) = 1 + d;
@@ -142,17 +142,17 @@ close all;
     figure;
 
     xlimit = 7;
-    x_coords   = [-xlimit xlimit xlimit -xlimit];
-    y_coords   = [Limit_winding_bottom Limit_winding_bottom Limit_winding_top Limit_winding_top];
-    y_coords_1 = [ Limit_winding_top Limit_winding_top 10 10];
-    y_coords_2 = [ Upper_gap Upper_gap Lower_gap Lower_gap];
-    y_coords_3 = [ -4 -4 Limit_winding_bottom Limit_winding_bottom];
+    x_coords   = [-xlimit               xlimit               xlimit               -xlimit];
+    y_coords   = [ Limit_winding_bottom Limit_winding_bottom Limit_winding_top    Limit_winding_top];
+    y_coords_1 = [ Limit_winding_top    Limit_winding_top    10                   10];
+    y_coords_2 = [ Upper_gap            Upper_gap            Lower_gap            Lower_gap];
+    y_coords_3 = [-4                    -4                   Limit_winding_bottom Limit_winding_bottom];
 
-    fill(x_coords, y_coords,   [0.95 0.95 1.00]);  % light blue
+    fill(x_coords, y_coords,   [0.95 0.95 1.00]); 
     hold on;
-    fill(x_coords, y_coords_1, [0.90 0.95 0.85]);  % light green
+    fill(x_coords, y_coords_1, [0.90 0.95 0.85]);  
     fill(x_coords, y_coords_3, [0.90 0.95 0.85]);
-    fill(x_coords, y_coords_2, [0.95 0.80 0.90]);  % light purple
+    fill(x_coords, y_coords_2, [0.95 0.80 0.90]);  
 
     plot(alpha, f_alpha, 'k', 'LineWidth', 3);
     
@@ -164,11 +164,11 @@ close all;
     plot([gamma gamma],   [Lower_gap  Upper_gap],    'r-', 'LineWidth', 2);
 
     % --- Add the decay lengths ---
-    plot(left_decay_lengths(1:end-1),    frequencies(1:end-1),   'bx', 'LineWidth', 4, 'MarkerSize', 8);
-    plot(right_decay_lengths(1:end-1),   frequencies(1:end-1),   'bx', 'LineWidth', 4, 'MarkerSize', 8);
+    plot(left_decay_lengths(1:end-1),    frequencies(1:end-1),   'bx', 'LineWidth', 4, 'MarkerSize', 10);
+    plot(right_decay_lengths(1:end-1),   frequencies(1:end-1),   'bx', 'LineWidth', 4, 'MarkerSize', 10);
     
-    plot(left_decay_lengths_2(1:end-1),  frequencies_2(1:end-1), 'bx', 'LineWidth', 4, 'MarkerSize', 8);
-    plot(right_decay_lengths_2(1:end-1), frequencies_2(1:end-1), 'bx', 'LineWidth', 4, 'MarkerSize', 8);
+    plot(left_decay_lengths_2(1:end-1),  frequencies_2(1:end-1), 'bx', 'LineWidth', 4, 'MarkerSize', 10);
+    plot(right_decay_lengths_2(1:end-1), frequencies_2(1:end-1), 'bx', 'LineWidth', 4, 'MarkerSize', 10);
 
     % --- Plot the frequencies at limit of winding region ---
     plot(left_decay_lengths(end),    frequencies(end),   'co', 'LineWidth', 4, 'MarkerSize', 8);
