@@ -10,8 +10,12 @@ In this computational notebook, we provide the MATLAB code for the computations 
 
 ## Tridiagonal k-Toeplitz Operators:
 
-- `Monomer_Band_Surface.m`
+- `Defect_Spectral_Convergence.m`
 <p align="center"> <img src="Figures/Defect_Convergence.png" alt="BandMonomer" width="800"/> </p>
+
+- `Regions_monomer_Band.m`
+- This plot Qualitatively illustrates the behaviour of an eigenmode depending on its' eigenfrequency. 
+<p align="center"> <img src="Figures/Schematic_Spectrum.png" alt="BandMonomer" width="600"/> </p>
 
 
 ## Complex Quasiperiodic Gauge Capacitance matrix:
@@ -36,12 +40,6 @@ In the subwavelength regime, the complex quasiperiodic capacitance matrix enable
 
 - `Dimer_Band.m`
 <p align="center"> <img src="Figures/Band_Dimer.png" alt="BandMonomer" width="400"/> </p>
-
-- `Regions_monomer_Band.m`
-- This plot Qualitatively illustrated the behaviour of an eeigenmode depending on its' eigenfrequency. 
-<p align="center"> <img src="Figures/Schematic_Spectrum.png" alt="BandMonomer" width="600"/> </p>
-
-
 
 
 ## II. Defected Resonator chians  
