@@ -8,6 +8,12 @@ Date: 15.05.2025
 
 In this computational notebook, we provide the MATLAB code for the computations in [1].
 
+## Tridiagonal k-Toeplitz Operators:
+
+- `Monomer_Band_Surface.m`
+<p align="center"> <img src="Figures/Defect_Convergence.png" alt="BandMonomer" width="800"/> </p>
+
+
 ## Complex Quasiperiodic Gauge Capacitance matrix:
 We inverstigate the non-Hermitian skin effect under qusiperiodic boundary consitions
 
