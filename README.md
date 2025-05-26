@@ -46,7 +46,7 @@ In the subwavelength regime, the complex quasiperiodic capacitance matrix enable
 A defected monomer chain of $N$ one-dimensional subwavelength resonators, with length $\ell$ and spacing $s$. The wave speed inside the resonators is $v = 1$, whereas in the defected resonator the speed is $\tilde{v} = 1 + \eta$.  
 <p align="center"> <img src="Figures/Defected_resonator_chain.png" alt="BandMonomer" width="1000"/> </p>
 
-- `Defected_Spectral_Convergence.m`  
+- `Monomer_Band.m`  
 
 The defect supports an eigenfrequency within the bandgap. This defect eigenfrequency is highlighted in red.  
 <p align="center"> <img src="Figures/Defect_resonance_monomer.png" alt="BandMonomer" width="400"/> </p>
