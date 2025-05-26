@@ -15,7 +15,7 @@
     s1    = 0.5;        % Spacing betweeen the resonators
     l1    = 0.5;        % Length of the resonators
     L     = s1 + l1;    % Length of the unit cell
-    Nx    = 1000;       % Number of plotting points in the bands
+    Nx    = 100;        % Number of plotting points in the bands
     fs    = 18;         % Fontsize in plot annotation
     lw    = 3;          % Linewidth of spectral bands
     
@@ -38,17 +38,15 @@
     lambda = linspace(0, 0.2^2, 1000);
     betaTilde = acosh(-(a-lambda) ./ (2*b* exp(r)));
 
-
 %% --- Compute Frequency convergence ---
 
-            % System size and eta range
     N        = 12;
     sizes    = 10:2:N+2;
     etas     = linspace(0.1, 5, 10); 
     slopes   = zeros(size(etas));
     w_closed = zeros(size(etas));
     
-    % Loop over eta
+    % --- Loop over the defect sizes ---
     for j = 1:length(etas)
         eta = etas(j);
     
@@ -58,11 +56,10 @@
             / (2 * eta + 1) );
     
         w_closed(j) = w_def_closed_form;
-    
         res = zeros(1, length(sizes));
         idx = 1;
     
-        % Loop over system sizes
+        % --- Loop over system sizes ---
         for n = sizes
             defect_site = floor(n/2);
             l = l1 * ones(1, n);
@@ -86,27 +83,20 @@
             idx = idx + 1;
         end
     
-        % Compute convergence slope
+        % --- Compute the exponential convergence rate ---
         log_res = log(res);
         p = polyfit(sizes, log_res, 1);
         slopes(j) = -p(1);  
     end
 
-
-    % --- Plot the convergence rate against beta ---
-
+    % --- Compare numerical to analytical convergence rate ---
     figure;
     plot(real(betaTilde), sqrt(lambda),'r-', 'LineWidth', 2);
     hold on;
     plot(slopes, w_closed, 'bx', 'MarkerSize', 8, 'LineWidth', 2);
-    
     legend({'$\tilde{\beta}(\lambda)$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
-
-    %xlabel('$\tilde{\beta}$ and $B$ respectively', 'Interpreter', 'latex', 'FontSize', fs);
     ylabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
-
     ylim([0.07, 0.16]);
-
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
     set(gcf, 'Position', [100, 100, 400, 250]); 
     grid on;
@@ -114,12 +104,9 @@
 
 %% --- Truncate Laurent Operator convergence ---
 
-    etas       = linspace(0.01, 5, 10);  
-    N          = 107;
-    n_values   = 20:4:N-60;
-    
-    
-    % Preallocate storage
+    etas         = linspace(0.01, 5, 10);  
+    N            = 107;
+    n_values     = 20:4:N-60;
     decay_slopes = zeros(size(etas));
     lambda_ns    = zeros(size(etas));
     
@@ -128,14 +115,13 @@
         pos = 3;
         defect_pos = floor(N/pos);
     
-        % Large matrix to approximate "Operator"
+        % --- Large matrix to approximate "Operator" ---
         l = l1 * ones(1, N);
         s = s1 * ones(1, N);
         C = Capacitance(N, s, gamma, l);
         D = eye(N);
         D(defect_pos, defect_pos) = 1 + eta;
         C = C * D;
-    
         [v, ~] = eigs(C, 1, 'largestabs'); 
     
         residuals = zeros(size(n_values));
@@ -154,34 +140,30 @@
             lambda_n = eigs(Cn, 1, 'largestabs');
             lambda_n_vals(i) = lambda_n;
     
-            % Truncate eigenvector from operator
+            % --- Truncate eigenvector from operator ---
             start_idx = floor((N - n)/pos) + 1;
             end_idx   = start_idx + n - 1;
             v_trunc   = v(start_idx:end_idx);
     
-            % Residual norm
+            % --- Residual norm ---
             residual_vector = (Cn - lambda_n * eye(n)) * v_trunc;
             residuals(i)    = norm(residual_vector);
         end
     
-        % Measure exponential decay rate
+        % --- Compute the exponential convergence rate ---
         p = polyfit(n_values, log(residuals), 1);
         decay_slopes(j) = p(1); 
         lambda_ns(j)    = lambda_n_vals(end); 
     end
     
+    % --- Compare numerical to analytical convergence rate ---
     figure;
     plot(r-real(betaTilde), sqrt(lambda),'r-', 'LineWidth', 2);
     hold on;
     plot( decay_slopes*pos, sqrt(delta *lambda_ns), 'bx', 'MarkerSize', 8, 'LineWidth', 2);
-
     legend({'$r-\tilde{\beta}(\lambda)$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
-
-    %xlabel('$\tilde{\beta}(\lambda) - r$ and $B$ respectively', 'Interpreter', 'latex', 'FontSize', fs);
     ylabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
-
     ylim([0.07, 0.16]);
-
     xticks([-2, -1, 0, r]); 
     xticklabels({'$-2$', '$-1$', '$0$', '$r$'});
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
@@ -192,12 +174,9 @@
 %% --- Truncate Toeplitz Operator convergence ---
 
     % Parameters and constants
-    etas       = linspace(0.1, 5, 10); 
-    N          = 81;
-    n_values   = 30:4:N-40;
-    
-    
-    % Preallocate storage
+    etas         = linspace(0.1, 5, 10); 
+    N            = 81;
+    n_values     = 30:4:N-40;
     decay_slopes = zeros(size(etas));
     lambda_ns    = zeros(size(etas));
     
@@ -206,14 +185,13 @@
         pos = 2;
         defect_pos = floor(N/pos);
     
-        % Large matrix to approximate "Operator"
+        % --- Large matrix to approximate "Operator" ---
         l = l1 * ones(1, N);
         s = s1 * ones(1, N);
         C = Capacitance(N, s, gamma, l);
         D = eye(N);
         D(defect_pos, defect_pos) = 1 + eta;
         C = C * D;
-    
         [v, ~] = eigs(C, 1, 'largestabs'); 
     
         residuals = zeros(size(n_values));
@@ -232,36 +210,34 @@
             lambda_n = eigs(Cn, 1, 'largestabs');
             lambda_n_vals(i) = lambda_n;
     
-            % Truncate eigenvector from large matrix
+             % --- Truncate eigenvector from operator ---
             v_trunc   = v(1:n);
     
-            % Residual norm
+            % --- Residual norm ---
             residual_vector = (Cn - lambda_n * eye(n)) * v_trunc;
             residuals(i)    = norm(residual_vector) ;
         end
     
-        % Measure exponential decay rate
+        % --- Compute the exponential convergence rate ---
         p = polyfit(n_values, log(residuals), 1);
         decay_slopes(j) = p(1); 
         lambda_ns(j)    = lambda_n_vals(end); 
     end
 
+    % --- Compare numerical to analytical convergence rate ---
     figure;
     plot(real(betaTilde)-r, sqrt(lambda),'r-', 'LineWidth', 2);
     hold on;
     plot( decay_slopes, sqrt(delta *lambda_ns), 'bx', 'MarkerSize', 8, 'LineWidth', 2);
     legend({'$\tilde{\beta}(\lambda)-r$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
-
-    %xlabel('$\tilde{\beta}(\lambda) - r$ and $B$ respectively', 'Interpreter', 'latex', 'FontSize', fs);
     ylabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
-
     ylim([0.07, 0.16]);
-
     xticks([-r, 0, 1, 2]); 
     xticklabels({'$-r$', '$0$', '$1$', '$2$'});
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
     set(gcf, 'Position', [100, 100, 400, 250]); 
     grid on;
+
 
 %% --- Define the Capacitance Matrix ---
 
