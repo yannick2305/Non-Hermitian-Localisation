@@ -1,7 +1,7 @@
 %{
     --------------------------------------------------------------
     Author(s):    [Erik Orvehed HILTUNEN , Yannick DE BRUIJN]
-    Date:         [April 2025]
+    Date:         [May 2025]
     Description:  [Spectral plot monomer chain]
     --------------------------------------------------------------
 %}
@@ -118,3 +118,107 @@
 
     grid off;
     hold off;
+
+
+%% --- Compute the resonances in a finite defected resonator chain ---
+
+    N_Def = 50;
+    eta = 1.3;
+
+    l   = l1 * ones(1, N_Def);
+    s   = s1 * ones(1, N_Def);
+
+    % --- Generate the capacitance matrix ---
+    capmat = Capacitance(N_Def, s, gamma,  l);
+
+    % --- Define defect Matrix ---
+    D = eye(N_Def);
+    defect_site = floor(N_Def/3);
+    D(defect_site, defect_site) = 1 + eta;
+    Def = D * capmat;
+       
+    % --- Compute the resonances ---
+    [Vect, eigenvalues_matrix] = eig(Def);
+    eigenvalues = sort(diag(eigenvalues_matrix));
+    eigenvalues = abs(eigenvalues);
+    resonances  = sqrt(eigenvalues * delta);
+
+    lim1 = min(f_z);
+    lim2 = max(f_z);
+
+    % --- Retrieve the defect frequncies ---
+    def = [];
+    if eta > 0
+        def(1) = resonances(N_Def);
+        resonances(N_Def) = NaN;
+    else
+        def(1) = resonances(2);
+        resonances(2)   = NaN;
+    end
+
+    disp('----------------------------------------');
+    disp(['Defect of size eta= ', num2str(eta)]);
+    disp(['Defect Frequency 1: ', num2str(def(1))]);
+
+    % --- Plot the resonances and defect resonances ---
+    figure;
+    h1 = plot(resonances, 'ko', 'LineWidth', 4, 'MarkerSize', 8); 
+    hold on;
+    if eta > 0
+        % --- Defect in the top spectral Gap ---
+        h2 = plot(N_Def,   def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+    else
+        % --- Defect in the lower spectral Gap ---
+        h2 = plot(2,                def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+    end
+
+    % --- Mark the quasiperiodic spectrum ---
+    yline(lim1, 'b--', 'LineWidth', 1);
+    yline(lim2, 'b--', 'LineWidth', 1);
+
+    xlabel('Index',    'Interpreter', 'latex', 'FontSize', fs);
+    ylabel('$\omega$', 'Interpreter', 'latex', 'FontSize', fs);
+    set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    legend([h1, h2], {'Band Resonance', 'Defect Resonance'}, 'Interpreter', 'latex', 'Location', 'southeast', 'Box', 'on');
+    set(gcf, 'Position', [100, 100, 500, 300]);
+    ylim([0, 0.13]);
+
+
+
+%% --- Define the finite gauge Capacitance matrix ---
+
+function capmat = Capacitance(N, s, gamma,  ell)
+    
+    capmat = zeros(N, N);  
+    
+    % --- Popolate the matrix ---
+    for i = 1:N
+        for j = 1:N
+            if i == j
+            % --- Populate  diagonal ---
+                if i == 1
+                    capmat(i,j) = (gamma / s(i)) * (ell(i) / (1 - exp(-gamma * ell(i))));
+                % Case 2: 1 < i = j < N
+                elseif i > 1 && i < N
+                    capmat(i,j) = (gamma / s(i))   * (ell(i) / (1 - exp(-gamma * ell(i)))) ...
+                                - (gamma / s(i-1)) * (ell(i) / (1 - exp( gamma * ell(i))));
+                % Case 3: i = j = N
+                else
+                    capmat(i,j) = -(gamma / s(i-1)) * (ell(i) / (1 - exp(gamma * ell(i))));
+                end
+
+            % --- Populate lower diagonal ---
+                elseif i == j - 1
+                    % Case 4: 1 <= i = j - 1 <= N - 1
+                    capmat(i,j) = -(gamma / s(i)) * (ell(i) / (1 - exp(-gamma * ell(j))));
+
+            % --- Populate upper diagonal ---
+                elseif i == j + 1 
+                    % Case 5: 2 <= i = j + 1 <= N
+                    capmat(i,j) = (gamma / s(j)) * (ell(i) / (1 - exp(gamma * ell(j))));
+            end
+        end
+    end
+end
+
+
