@@ -9,6 +9,10 @@ In this computational notebook, we provide the MATLAB code for the computations 
 
 ## I. Tridiagonal k-Toeplitz Operators
 
+We present a novel Technuque to construct eigenvectors for tridiagonal $k$-Toeplitz operators
+<p align="center"> <img src="Figures/Tridiagonal_k_Toeplitz.png" alt="BandMonomer" width="400"/> </p>
+and demonstrate that the complex band structure offers an effective method to get sharp estimates on the decay properties of the eigenvectors.
+
 - `Defect_Spectral_Convergence.m`  
 <p align="center"> <img src="Figures/Defect_Convergence.png" alt="BandMonomer" width="800"/> </p>
 
