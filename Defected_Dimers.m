@@ -1,19 +1,20 @@
 %{
     --------------------------------------------------------------
     Author(s):    [Erik Orvehed HILTUNEN , Yannick DE BRUIJN]
-    Date:         [April 2025]
+    Date:         [May 2025]
     Description:  [Defected Dimer system and Green's function]
     --------------------------------------------------------------
 %}
 
-clear all;
-close all;
+    clear all;
+    close all;
 
 % --- Define the system parameters ---
     n     = 200;        % Number of unit cells
+    N_Def = 40;         % Size of defected sytem (even number)
     gamma = 3;          % Gauge potential
     delta = 0.001;      % Contrast parameter
-    nu    = 1.5;        % Change in wavespeed
+    eta   = 1.5;        % Change in wavespeed
     ell   = [1, 1];     % Resonator lengths
     spa   = [1, 2];     % Resonator spacings
     fs    = 18;         % Fontsize in plot annotation
@@ -21,9 +22,6 @@ close all;
 
     search_range = 300000; 
     
-    % --- Set the site of the defect ---
-    defect_site = floor(n/3);
-
 % --- Normalise the unit cell to L = 1 ---
     spa = (0.5 / (spa(1) + spa(2))) * spa;
     ell = (0.5 / (ell(1) + ell(2))) * ell;
@@ -40,52 +38,8 @@ close all;
         s(idx:idx+1) = [spa(1), spa(2)];
     end
 
-    N = 2 * n;
-    
-    % --- Generate the capacitance matrix ---
-    capmat = Capacitance(N, s, gamma,  l);
-
-    % --- Define defect Matrix ---
-    D = eye(N);
-    D(defect_site, defect_site) = 1 + nu;
-    Def = D * capmat;
-       
-    % --- Compute the resonances ---
-    [Vect, eigenvalues_matrix] = eig(Def);
-    eigenvalues = sort(diag(eigenvalues_matrix));
-    eigenvalues = abs(eigenvalues);
-    resonances  = sqrt(eigenvalues * delta);
-
-% --- Compute the limit of the spectrum ---
-
-    beta_fixed = sum(ell) * gamma / 2;
-    cap0  = quasiperiodic_capacitance_matrix(0,  beta_fixed, gamma, ell, spa);
-    cappi = quasiperiodic_capacitance_matrix(pi, beta_fixed, gamma, ell, spa);
-    
-    lim1 = real(sqrt(delta * eig(cap0)) );
-    lim2 = real(sqrt(delta * eig(cappi)));
-
-% --- Retrieve the defect frequncies ---
-    def = [];
-    if nu > 0
-        def(1) = resonances(n);
-        def(2) = resonances(2*n);
-        resonances(n)   = NaN;
-        resonances(2*n) = NaN;
-    else
-        def(1) = resonances(2);
-        def(2) = resonances(n + 1);
-        resonances(2)   = NaN;
-        resonances(n+1) = NaN;
-    end
-
-    disp('----------------------------------------');
-    disp(['Defect of size eta= ', num2str(nu)]);
-    disp(['Defect Frequency 1: ', num2str(def(1))]);
-    disp(['Defect Frequency 2: ', num2str(def(2))]);
-
-
 % --- Discrete Green's function ---
+    N = 2*n;
     cap = delta * Capacitance(N, s, gamma,  l);
     
     % --- Generate a point source ---
@@ -122,13 +76,6 @@ close all;
 
     end
 
-    % Debugging
-    %figure;
-    %plot(decay_l, w);
-    %hold on;
-    %plot(decay_r, w);
-    %hold off;
-
 % --- Compute the spectral bands ---
     L = sum(ell_fix) + sum(spa_fix);
 
@@ -137,8 +84,8 @@ close all;
     beta_fixed =   0.5 * sum(ell_fix) * gamma ; 
 
     % --- initialise plotting range for band/gap functions ---
-    alpha_vals   = linspace(-pi, pi, N);
-    beta_vals_1  = linspace(-3 + beta_fixed,  3 + beta_fixed, N);
+    alpha_vals        = linspace(-pi, pi, N);
+    beta_vals_1       = linspace(-3 + beta_fixed,  3 + beta_fixed, N);
     beta_vals_2_fine  = linspace(- 2 + beta_fixed, 2 + beta_fixed, search_range);
     
     band_functions = zeros(2, N);
@@ -253,20 +200,64 @@ close all;
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
     set(gcf, 'Position', [100, 100, 500, 300]); 
 
-%%
+
+%% --- Compute the resonances in a finite defected resonator chain ---
+    
+    % --- Generate the capacitance matrix ---
+    capmat = Capacitance(N_Def, s, gamma,  l);
+
+    % --- Define defect Matrix ---
+    D = eye(N_Def);
+    defect_site = floor(N_Def/3);
+    D(defect_site, defect_site) = 1 + eta;
+    Def = D * capmat;
+       
+    % --- Compute the resonances ---
+    [Vect, eigenvalues_matrix] = eig(Def);
+    eigenvalues = sort(diag(eigenvalues_matrix));
+    eigenvalues = abs(eigenvalues);
+    resonances  = sqrt(eigenvalues * delta);
+
+% --- Compute the limit of the spectrum ---
+
+    beta_fixed = sum(ell) * gamma / 2;
+    cap0  = quasiperiodic_capacitance_matrix(0,  beta_fixed, gamma, ell, spa);
+    cappi = quasiperiodic_capacitance_matrix(pi, beta_fixed, gamma, ell, spa);
+    
+    lim1 = real(sqrt(delta * eig(cap0)) );
+    lim2 = real(sqrt(delta * eig(cappi)));
+
+% --- Retrieve the defect frequncies ---
+    def = [];
+    if eta > 0
+        def(1) = resonances(floor(N_Def/2));
+        def(2) = resonances(N_Def);
+        resonances(floor(N_Def/2))   = NaN;
+        resonances(N_Def) = NaN;
+    else
+        def(1) = resonances(2);
+        def(2) = resonances(floor(N_Def/2) + 1);
+        resonances(2)   = NaN;
+        resonances(floor(N_Def/2)+1) = NaN;
+    end
+
+    disp('----------------------------------------');
+    disp(['Defect of size eta= ', num2str(eta)]);
+    disp(['Defect Frequency 1: ', num2str(def(1))]);
+    disp(['Defect Frequency 2: ', num2str(def(2))]);
 
 % --- Plot the resonances and defect resonances ---
     figure;
     h1 = plot(resonances, 'ko', 'LineWidth', 4, 'MarkerSize', 8); 
     hold on;
-    if nu > 0
+    if eta > 0
         % --- Defect in the top spectral Gap ---
-        h2 = plot(n,   def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
-        plot(2*n,      def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+        h2 = plot(floor(N_Def/2),   def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+        plot(N_Def,                 def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
     else
         % --- Defect in the lower spectral Gap ---
-        h2 = plot(2,   def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
-        plot(n+1,      def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+        h2 = plot(2,                def(1), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
+        plot(floor(N_Def/2)+1,      def(2), 'rx', 'LineWidth', 4, 'MarkerSize', 8);
     end
 
     % --- Mark the quasiperiodic spectrum ---
