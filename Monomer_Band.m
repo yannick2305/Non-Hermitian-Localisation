@@ -114,7 +114,7 @@
     xticks([-pi/L, 0, pi/L]); 
     xticklabels({'$-\pi/L$', '$0$', '$\pi/L$'});
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
-    set(gcf, 'Position', [100, 100, 500, 400]); 
+    set(gcf, 'Position', [100, 100, 500, 300]); 
 
     grid off;
     hold off;
