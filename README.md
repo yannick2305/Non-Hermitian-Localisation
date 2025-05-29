@@ -1,7 +1,7 @@
 # Complex Band Structure for tridiagonal $k$-Toeplitz operators and localisation transition in defected finite non-Hermitian systems
 
 **Authors:** E. O. HILTUNEN and Y. DE BRUIJN  
-**Date:** 15.05.2025
+**Date:** 29.05.2025
 
 ---
 
