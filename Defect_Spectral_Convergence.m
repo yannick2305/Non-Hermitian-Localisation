@@ -91,15 +91,17 @@
 
     % --- Compare numerical to analytical convergence rate ---
     figure;
-    plot(real(betaTilde), sqrt(lambda),'r-', 'LineWidth', 2);
+    plot(sqrt(lambda), real(betaTilde), 'r-', 'LineWidth', 2);
     hold on;
-    plot(slopes, w_closed, 'bx', 'MarkerSize', 8, 'LineWidth', 2);
+    plot(w_closed, slopes, 'bx', 'MarkerSize', 8, 'LineWidth', 2);
     legend({'$\tilde{\beta}(\lambda)$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
-    ylabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
-    ylim([0.07, 0.16]);
+    xlabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
+    xlim([0.07, 0.16]);
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    ylabel('Exponential rate' , 'Interpreter', 'latex', 'FontSize', fs+2);
     set(gcf, 'Position', [100, 100, 400, 250]); 
     grid on;
+
 
 
 %% --- Truncate Laurent Operator convergence ---
@@ -158,15 +160,16 @@
     
     % --- Compare numerical to analytical convergence rate ---
     figure;
-    plot(r-real(betaTilde), sqrt(lambda),'r-', 'LineWidth', 2);
+    plot(sqrt(lambda), real(betaTilde) - r, 'r-', 'LineWidth', 2);
     hold on;
-    plot( decay_slopes*pos, sqrt(delta *lambda_ns), 'bx', 'MarkerSize', 8, 'LineWidth', 2);
-    legend({'$r-\tilde{\beta}(\lambda)$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
-    ylabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
-    ylim([0.07, 0.16]);
-    xticks([-2, -1, 0, r]); 
-    xticklabels({'$-2$', '$-1$', '$0$', '$r$'});
+    plot(sqrt(delta *lambda_ns), -decay_slopes*pos, 'bx', 'MarkerSize', 8, 'LineWidth', 2);
+    legend({'$\tilde{\beta}(\lambda)-r$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
+    xlabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
+    xlim([0.07, 0.16]);
+    yticks([0, r, 1, 2]); 
+    yticklabels({'$0$', '$r$', '$1$', '$2$'});
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    ylabel('Exponential rate' , 'Interpreter', 'latex', 'FontSize', fs+2);
     set(gcf, 'Position', [100, 100, 400, 250]); 
     grid on;
 
@@ -226,15 +229,16 @@
 
     % --- Compare numerical to analytical convergence rate ---
     figure;
-    plot(real(betaTilde)-r, sqrt(lambda),'r-', 'LineWidth', 2);
+    plot(sqrt(lambda),(r-real(betaTilde)), 'r-', 'LineWidth', 2);
     hold on;
-    plot( decay_slopes, sqrt(delta *lambda_ns), 'bx', 'MarkerSize', 8, 'LineWidth', 2);
-    legend({'$\tilde{\beta}(\lambda)-r$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
-    ylabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
-    ylim([0.07, 0.16]);
-    xticks([-r, 0, 1, 2]); 
-    xticklabels({'$-r$', '$0$', '$1$', '$2$'});
+    plot(sqrt(delta *lambda_ns), -decay_slopes, 'bx', 'MarkerSize', 8, 'LineWidth', 2);
+    legend({'$r-\tilde{\beta}(\lambda)$', '$B(\lambda)$'}, 'Interpreter', 'latex', 'Location', 'best');
+    xlabel('$\lambda$' , 'Interpreter', 'latex', 'FontSize', fs);
+    xlim([0.07, 0.091]);
+    yticks([0, r, 1, 2]); 
+    yticklabels({'$0$', '$r$', '$1$', '$2$'});
     set(gca, 'FontSize', fs+4, 'TickLabelInterpreter', 'latex');
+    ylabel('Exponential rate' , 'Interpreter', 'latex', 'FontSize', fs+2);
     set(gcf, 'Position', [100, 100, 400, 250]); 
     grid on;
 
