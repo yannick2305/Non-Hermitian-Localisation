@@ -77,5 +77,5 @@ This plot qualitatively illustrates the different decay behaviours observed in t
 
 When using the code in the repository, please cite the following reference:
 
-[1] De Bruijn, Y. and Hiltunen, E.O. (2025), *Complex Band Structure for tridiagonal $k$-Toeplitz operators and localisation transition in defected finite non-Hermitian systems*.
+[1] De Bruijn, Y. and Hiltunen, E.O. (2025), *Complex Band Structure for tridiagonal k-Toeplitz operators and localisation transition in defected finite non-Hermitian systems*.
 
